@@ -1,0 +1,24 @@
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 85px;
+    /* Height of the fixed navbar */
+}
+
+body {
+    font-family: var(--font-base);
+    background-color: var(--color-bg-offwhite);
+    color: var(--color-text-main);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.heading-font {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+}

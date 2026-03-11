@@ -1,0 +1,116 @@
+/* Utility classes */
+.text-dark-green {
+    color: var(--color-dark-green) !important;
+}
+
+.bg-dark-green {
+    background-color: var(--color-dark-green) !important;
+}
+
+.text-orange {
+    color: var(--color-orange) !important;
+}
+
+.bg-orange {
+    background-color: var(--color-orange) !important;
+}
+
+.bg-off-white {
+    background-color: var(--color-bg-offwhite) !important;
+}
+
+.bg-light-green {
+    background-color: var(--color-light-green) !important;
+}
+
+.fs-7 {
+    font-size: 0.875rem !important;
+}
+
+.smaller {
+    font-size: 0.75rem;
+}
+
+.text-tracking {
+    letter-spacing: 0.05em;
+}
+
+.py-6 {
+    padding-top: 6rem !important;
+    padding-bottom: 6rem !important;
+}
+
+.py-7 {
+    padding-top: 8rem !important;
+    padding-bottom: 8rem !important;
+}
+
+@media (max-width: 991.98px) {
+    .py-6 {
+        padding-top: 4rem !important;
+        padding-bottom: 4rem !important;
+    }
+
+    .py-7 {
+        padding-top: 5rem !important;
+        padding-bottom: 5rem !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .py-6 {
+        padding-top: 3.5rem !important;
+        padding-bottom: 3.5rem !important;
+    }
+
+    .py-7 {
+        padding-top: 4rem !important;
+        padding-bottom: 4rem !important;
+    }
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg) !important;
+}
+
+/* Animations - Initial state */
+.section-fade,
+.fade-up-element,
+.fade-in-element {
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+.fade-up-element {
+    transform: translateY(40px);
+    transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1), transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.fade-in-element {
+    transition: opacity 1.2s ease 0.3s;
+}
+
+.section-fade {
+    transform: translateY(30px);
+    transition: opacity 1s cubic-bezier(0.165, 0.84, 0.44, 1), transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Animations - Final state */
+.fade-up-element.visible,
+.section-fade.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-in-element.visible {
+    opacity: 1;
+}

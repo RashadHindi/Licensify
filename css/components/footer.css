@@ -1,0 +1,39 @@
+/* Footer */
+footer {
+    background-color: var(--color-dark-green);
+    color: var(--color-white);
+    padding: 3rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-link,
+.footer-icon-hover {
+    transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+    opacity: 1 !important;
+    padding-left: 5px;
+    color: var(--color-white) !important;
+}
+
+.footer-icon-hover:hover {
+    opacity: 1 !important;
+    color: var(--color-orange) !important;
+    transform: scale(1.1);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--color-white) !important;
+}
+
+@media (min-width: 992px) {
+    footer {
+        padding: 4rem 0;
+    }
+}
