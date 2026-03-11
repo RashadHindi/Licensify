@@ -1,0 +1,327 @@
+.reservation-hero {
+    padding-top: 100px;
+    /* Accounts for fixed navbar */
+    background-color: var(--color-bg-offwhite);
+    padding-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.reservation-title {
+    color: var(--color-dark-green);
+    font-family: var(--font-heading);
+    font-weight: 700;
+}
+
+.section-wrapper {
+    background-color: var(--color-white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-dark-green);
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--color-light-green);
+    padding-bottom: 0.8rem;
+}
+
+/* Trainer Cards */
+.trainer-card {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-light-green);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.trainer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.trainer-photo-placeholder {
+    width: 100%;
+    height: 200px;
+    background-color: var(--color-light-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-dark-green);
+}
+
+.trainer-photo-placeholder i {
+    font-size: 4rem;
+    opacity: 0.2;
+}
+
+.trainer-info {
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.trainer-name {
+    font-family: var(--font-heading);
+    color: var(--color-dark-green);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 0.2rem;
+}
+
+.trainer-rating {
+    color: #ffc107;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.trainer-rating span {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.trainer-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.t-badge {
+    background-color: var(--color-light-green);
+    color: var(--color-dark-green);
+    padding: 0.3rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.booking-form {
+    background-color: var(--color-bg-offwhite);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+}
+
+.b-form-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 0.3rem;
+}
+
+.b-form-control {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    width: 100%;
+    background-color: var(--color-white);
+}
+
+.timeslots-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.timeslot {
+    background-color: var(--color-white);
+    border: 1px solid var(--color-dark-green);
+    color: var(--color-dark-green);
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timeslot:hover,
+.timeslot.selected {
+    background-color: var(--color-dark-green);
+    color: var(--color-white);
+}
+
+.timeslot.disabled {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Custom Calendar */
+.calendar-wrapper {
+    background-color: var(--color-dark-green);
+    border-radius: var(--radius-card);
+    padding: 2rem;
+    color: var(--color-white);
+    box-shadow: var(--shadow-lg);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-header h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    margin: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.cal-day-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-bottom: 0.5rem;
+}
+
+.cal-date {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.cal-date:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.cal-date.empty {
+    cursor: default;
+}
+
+.cal-date.empty:hover {
+    background-color: transparent;
+}
+
+.cal-date.reserved {
+    background-color: var(--color-orange);
+    color: var(--color-white);
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(230, 81, 0, 0.4);
+}
+
+.cal-date.reserved::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    width: 4px;
+    height: 4px;
+    background-color: var(--color-white);
+    border-radius: 50%;
+}
+
+/* Reservation Details Modal/Panel */
+.reservation-details {
+    margin-top: 1.5rem;
+    background-color: var(--color-white);
+    color: var(--color-text-main);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: none;
+    /* Hidden by default */
+    animation: fadeIn 0.3s ease;
+}
+
+.reservation-details.active {
+    display: block;
+}
+
+.rd-title {
+    font-weight: 700;
+    color: var(--color-dark-green);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.rd-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.rd-info-row i {
+    color: var(--color-orange);
+    font-size: 1.1rem;
+}
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1055;
+}
+
+.custom-toast {
+    background-color: var(--color-white);
+    border-left: 4px solid var(--color-dark-green);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    padding: 1rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transform: translateX(120%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.custom-toast.show {
+    transform: translateX(0);
+}
+
+.toast-icon {
+    background-color: var(--color-light-green);
+    color: var(--color-dark-green);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.toast-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.toast-content h6 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--color-dark-green);
+}
+
+#trainer-search::placeholder {
+    color: var(--color-dark-green);
+    opacity: 0.6;
+}
+

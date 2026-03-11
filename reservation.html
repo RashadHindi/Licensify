@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licensify - Book Lessons</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/pages/reservation.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top bg-white border-bottom shadow-sm">
+        <div class="container-fluid px-4 px-lg-5 py-2">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+                <img src="images/Licensify-Logo2.png" class="logo-icon" alt="Licensify">
+                <span class="fw-bold fs-4 heading-font text-dark-green">Licensify</span>
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <i class="bi bi-list fs-1 text-dark-green"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1 gap-lg-4 fs-6 fw-medium text-uppercase text-tracking">
+                    <li class="nav-item"><a class="nav-link" href="index.html#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#topics">Study</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#practice-test">Practice Test</a></li>
+                    <li class="nav-item"><a class="nav-link text-orange fw-bold" href="reservation.html">Book
+                            Lessons</a></li>
+                </ul>
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
+                    <a href="#"
+                        class="text-decoration-none fw-bold fs-7 text-uppercase text-dark-green pe-lg-3">Login</a>
+                    <a href="#" class="btn btn-primary btn-rounded px-4 py-2 fw-semibold shadow-sm">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Reservation Header -->
+    <header class="reservation-hero">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold reservation-title mb-3">Book Your Next Driving Lesson</h1>
+            <p class="lead text-muted mx-auto" style="max-width: 600px;">
+                Choose a professional trainer, select an available date, and book your session in minutes.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mb-5 pb-5">
+        <div class="row g-5">
+
+            <!-- Left Column: Trainer Profiles -->
+            <div class="col-lg-8">
+                <div class="section-title d-flex justify-content-between align-items-center">
+                    <span class="mb-0">Available Trainers</span>
+                    <div class="position-relative"
+                        style="width: 100%; max-width: 250px; font-weight: 400; font-size: 1rem;">
+                        <input type="text" id="trainer-search" class="form-control rounded-pill shadow-none"
+                            style="padding-right: 2.5rem; background-color: var(--color-bg-offwhite); border: 1px solid var(--color-dark-green); color: var(--color-dark-green) !important; font-size: 0.95rem; line-height: 1.5;"
+                          placeholder="Search by name...">
+                        <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                    </div>
+                </div>
+                <div class="row g-4" id="trainers-container">
+                    <!-- Trainer Cards injected via JS -->
+                </div>
+            </div>
+
+            <!-- Right Column: Calendar & Details -->
+            <div class="col-lg-4">
+                <h4 class="section-title">Your Schedule</h4>
+
+                <!-- Custom Calendar -->
+                <div class="calendar-wrapper">
+                    <div class="calendar-header">
+                        <h4>March 2026</h4>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-light rounded-circle shadow-none">&lt;</button>
+                            <button class="btn btn-sm btn-outline-light rounded-circle shadow-none">&gt;</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid mb-2">
+                        <div class="cal-day-name">Sun</div>
+                        <div class="cal-day-name">Mon</div>
+                        <div class="cal-day-name">Tue</div>
+                        <div class="cal-day-name">Wed</div>
+                        <div class="cal-day-name">Thu</div>
+                        <div class="cal-day-name">Fri</div>
+                        <div class="cal-day-name">Sat</div>
+                    </div>
+                    <!-- Calendar days injected via JS -->
+                    <div class="calendar-grid" id="calendar-days">
+                    </div>
+
+                    <!-- Reservation Details Panel within Calendar Wrapper -->
+                    <div class="reservation-details" id="reservation-details-panel">
+                        <div class="rd-title">Reservation Details</div>
+                        <div class="rd-info-row">
+                            <i class="bi bi-calendar-event"></i>
+                            <span id="rd-date">Date</span>
+                        </div>
+                        <div class="rd-info-row">
+                            <i class="bi bi-clock"></i>
+                            <span id="rd-time">Time</span>
+                        </div>
+                        <div class="rd-info-row">
+                            <i class="bi bi-person-badge"></i>
+                            <span id="rd-trainer">Trainer</span>
+                        </div>
+                        <div class="rd-info-row mb-0">
+                            <i class="bi bi-car-front"></i>
+                            <span id="rd-car">Car</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Footer -->
+    <footer class="bg-dark-green text-white py-5 py-lg-6 border-top border-white border-opacity-10">
+        <div class="container pb-3">
+            <div class="row gy-5">
+                <div class="col-lg-4 pe-lg-5">
+                    <a class="d-inline-flex align-items-center gap-2 text-white text-decoration-none mb-4"
+                        href="index.html">
+                        <img src="images/Licensify-Logo2.png" class="logo-icon" alt="Licensify">
+                        <span class="fw-bold fs-4 heading-font">Licensify</span>
+                    </a>
+                    <p class="opacity-75 mb-4 pe-lg-4 fs-6">
+                        Your complete driving school platform. We bridge the gap between theory knowledge and real-world
+                        road confidence.
+                    </p>
+                </div>
+                <div class="col-sm-6 col-lg-2 offset-lg-1 d-flex flex-column">
+                    <h5 class="fw-bold mb-4 heading-font text-white fs-6 text-uppercase text-tracking opacity-75">
+                        Platform</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+                        <li><a href="index.html#topics"
+                                class="text-white opacity-75 text-decoration-none footer-link fw-medium">Theory
+                                Study</a></li>
+                        <li><a href="reservation.html"
+                                class="text-white opacity-75 text-decoration-none footer-link fw-medium">Book a
+                                Trainer</a></li>
+                    </ul>
+                </div>
+                <div class="col-sm-6 col-lg-2 d-flex flex-column">
+                    <h5 class="fw-bold mb-4 heading-font text-white fs-6 text-uppercase text-tracking opacity-75">
+                        Company</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0">
+                        <li><a href="index.html#about"
+                                class="text-white opacity-75 text-decoration-none footer-link fw-medium">About Us</a>
+                        </li>
+                        <li><a href="#"
+                                class="text-white opacity-75 text-decoration-none footer-link fw-medium">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 d-flex flex-column">
+                    <h5 class="fw-bold mb-4 heading-font text-white fs-6 text-uppercase text-tracking opacity-75">Stay
+                        Updated</h5>
+                    <form class="d-flex gap-2">
+                        <input type="email"
+                            class="form-control rounded-pill bg-white bg-opacity-10 border-0 text-white shadow-none px-3"
+                            placeholder="Email address" aria-label="Email address" required>
+                        <button class="btn btn-primary rounded-pill px-4 fw-medium" type="submit">Join</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row text-center mt-5 pt-4 border-top border-white border-opacity-10">
+                <div class="col-12 opacity-50 small">
+                    &copy; 2026 Licensify. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Reservation JS -->
+    <script src="js/modules/reservation.js"></script>
+</body>
+
+</html>
