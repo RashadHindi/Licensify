@@ -41,9 +41,19 @@
     color: white !important;
 }
 
+.btn-orange {
+    background-color: var(--color-orange) !important;
+    border-color: var(--color-orange) !important;
+    color: var(--color-white) !important;
+    transition: all 0.3s ease;
+}
+
 .btn-orange:hover {
+    background-color: var(--color-orange-hover) !important;
+    border-color: var(--color-orange-hover) !important;
     transform: translateY(-4px) scale(1.03);
     box-shadow: 0 12px 24px rgba(230, 81, 0, 0.3) !important;
+    color: var(--color-white) !important;
 }
 
 .btn-outline-danger:hover {

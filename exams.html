@@ -45,22 +45,25 @@
         </div>
     </nav>
 
-    <!-- Decorative Header Section -->
-    <div class="quiz-header pt-7 pb-5 mb-5 position-relative overflow-hidden">
+    <!-- Premium Header Section -->
+    <header class="quiz-header">
+        <!-- Decorative Swirl Background -->
+        <img src="images/bg-swirl.png" class="bg-swirl" alt="">
+        
         <div class="container position-relative z-1">
             <div class="row align-items-center">
                 <div class="col-lg-7">
-                    <h1 class="display-3 fw-bold text-dark-green heading-font mb-3" id="main-title">Theory Practice</h1>
-                    <p class="lead text-dark-green opacity-75" id="main-subtitle">Choose your license category and start your journey to success.</p>
+                    <h1 class="display-3 fw-bold heading-font mb-4" id="main-title">Theory Practice</h1>
+                    <p class="lead text-dark-green opacity-75 mb-0" id="main-subtitle">Choose your license category and begin your journey toward a successful driving test.</p>
                 </div>
-                <div class="col-lg-5 d-none d-lg-block text-end">
-                    <i class="bi bi-journal-check text-orange opacity-25" style="font-size: 8rem;"></i>
+                <div class="col-lg-5 d-none d-lg-block">
+                    <div class="ps-lg-5">
+                        <img src="images/exams-hero.png" class="hero-3d-graphic" alt="3D Driving Theory Icon">
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Abstract background shape like index.html -->
-        <div class="bg-shape position-absolute top-0 start-100 translate-middle-x"></div>
-    </div>
+    </header>
     <main class="py-5">
         <div class="container">
             <!-- VIEW 1: CATEGORY SELECTION -->
@@ -70,18 +73,28 @@
                 </div>
             </section>
 
-            <!-- VIEW 2: QUIZ SELECTION -->
-            <section id="view-quizzes" class="d-none animate-fade">
-                <div class="text-center mb-5">
-                    <button class="btn btn-link text-dark-green text-decoration-none fw-bold mb-3" onclick="location.reload()">
-                        <i class="bi bi-arrow-left me-1"></i> Change Category
-                    </button>
-                    <h2 class="display-5 fw-bold heading-font text-dark-green mb-2" id="selected-category-name">Private Cars</h2>
-                    <p class="text-muted">Select a quiz to start practicing. Each quiz contains randomized questions from our database.</p>
+            <!-- VIEW 2: QUIZ SELECTION (Integrated Hero) -->
+            <section id="view-quizzes" class="d-none animate-fade w-100 p-0">
+                <div class="quiz-selection-hero">
+                    <img src="images/bg-swirl.png" class="bg-swirl" alt="">
+                    <img src="images/exams-hero.png" class="bg-graphic-faded" alt="">
+                    
+                    <div class="container position-relative z-1">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <button class="btn btn-link text-dark-green text-decoration-none fw-bold mb-4 p-0 d-flex align-items-center gap-2" id="btn-back-to-categories">
+                                    <i class="bi bi-arrow-left fs-5"></i> Back to Categories
+                                </button>
+                                <h1 class="display-4 fw-bold heading-font text-dark-green mb-3" id="selected-category-name">Private Cars</h1>
+                                <p class="lead text-dark-green opacity-75 mb-0">Select a practice session to begin. Each quiz is designed to challenge your knowledge of road rules and signs.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
-                    <div id="quiz-list" class="d-flex flex-wrap justify-content-center gap-3">
-                        <!-- Quizzes will be injected by quiz.js -->
+
+                <div class="container pb-5">
+                    <div class="row g-4" id="quiz-list">
+                        <!-- Quiz cards will be injected by quiz.js -->
                     </div>
                 </div>
             </section>
@@ -159,7 +172,7 @@
                                     </div>
                                 </div>
                                 <div class="px-2">
-                                    <button class="btn btn-outline-danger btn-rounded w-100 mt-4 py-3 fw-bold small transition-all" onclick="location.reload()" style="border-width: 2px;">
+                                    <button class="btn btn-outline-danger btn-rounded w-100 mt-4 py-3 fw-bold small transition-all" id="btn-quit-quiz" style="border-width: 2px;">
                                         <i class="bi bi-x-circle me-2"></i>Quit Exam
                                     </button>
                                 </div>

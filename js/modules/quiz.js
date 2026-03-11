@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', function () {
         review: document.getElementById('view-review')
     };
 
+    // Push initial state
+    if (!history.state) {
+        history.replaceState({ view: 'categories' }, '', '#view-categories');
+    }
+
     // Initialize Categories
     function initCategories() {
         const grid = document.getElementById('categories-grid');
@@ -40,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function switchView(viewName) {
+    function switchView(viewName, updateHistory = true) {
         // Simple fade out
         Object.keys(views).forEach(key => {
             if (views[key]) {
@@ -53,42 +58,59 @@ document.addEventListener('DOMContentLoaded', function () {
         const titleEl = document.getElementById('main-title');
         const subtitleEl = document.getElementById('main-subtitle');
         const headerSection = document.querySelector('.quiz-header');
+        
+        // Reset header states
+        headerSection.classList.remove('header-minimal', 'header-hidden', 'd-none');
 
         switch (viewName) {
             case 'categories':
                 titleEl.textContent = "Theory Practice";
-                subtitleEl.textContent = "Choose your license category and start your journey to success.";
-                headerSection.classList.remove('d-none');
+                subtitleEl.textContent = "Choose your license category and begin your journey toward a successful driving test.";
                 break;
             case 'quizzes':
-                titleEl.textContent = "Select Quiz";
-                subtitleEl.textContent = `Practicing for: ${document.getElementById('selected-category-name').textContent}`;
-                headerSection.classList.remove('d-none');
+                headerSection.classList.add('header-hidden'); // Smooth collapse
                 break;
             case 'quiz':
-                headerSection.classList.add('d-none'); // Hide header during actual quiz for focus
+                headerSection.classList.add('header-hidden');
                 break;
             case 'results':
                 titleEl.textContent = "Exam Results";
                 subtitleEl.textContent = "See how well you performed on this theory test.";
-                headerSection.classList.remove('d-none');
+                headerSection.classList.add('header-minimal');
                 break;
             case 'review':
                 titleEl.textContent = "Question Review";
                 subtitleEl.textContent = "Review correct answers and explanations for your mistakes.";
-                headerSection.classList.remove('d-none');
+                headerSection.classList.add('header-minimal');
                 break;
         }
 
+        // Update browser history for back button support
+        if (updateHistory) {
+            history.pushState({ view: viewName }, '', `#view-${viewName}`);
+        }
+
         if (views[viewName]) {
-            views[viewName].classList.remove('d-none');
-            // Trigger animation
+            // Tiny delay to let the previous view fade out slightly and feel smoother
             setTimeout(() => {
-                views[viewName].classList.add('animate-fade');
-            }, 10);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+                views[viewName].classList.remove('d-none');
+                // Trigger animation
+                setTimeout(() => {
+                    views[viewName].classList.add('animate-fade');
+                }, 10);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 50);
         }
     }
+
+    // Handle Browser Back Button
+    window.addEventListener('popstate', (event) => {
+        if (event.state && event.state.view) {
+            switchView(event.state.view, false);
+        } else {
+            switchView('categories', false);
+        }
+    });
 
     function selectCategory(categoryId) {
         currentCategory = categoryId;
@@ -102,21 +124,36 @@ document.addEventListener('DOMContentLoaded', function () {
         const availableQuizzes = quizData.questions[categoryId] || [];
 
         for (let i = 0; i < 5; i++) {
-            const quizBtn = document.createElement('button');
-            quizBtn.className = 'quiz-pill m-2';
-            quizBtn.textContent = `Quiz ${i + 1}`;
+            const quizCol = document.createElement('div');
+            quizCol.className = 'col-md-4 col-sm-6';
+            
+            const isLocked = i >= availableQuizzes.length;
+            
+            quizCol.innerHTML = `
+                <div class="quiz-item-card ${isLocked ? 'opacity-50' : ''}" ${isLocked ? 'style="cursor: default;"' : ''}>
+                    <div class="quiz-number">Practice 0${i + 1}</div>
+                    <h4 class="heading-font">${isLocked ? 'Coming Soon' : 'Mock Theory Exam'}</h4>
+                    <p class="text-muted small mb-4">A complete set of 30 randomized questions to test your readiness.</p>
+                    <div class="btn-start">
+                        <i class="bi ${isLocked ? 'bi-lock-fill' : 'bi-arrow-right'}"></i>
+                    </div>
+                </div>
+            `;
 
-            // In a real app, we'd check if questions exist for this index
-            if (i >= availableQuizzes.length) {
-                quizBtn.classList.add('opacity-50');
-                quizBtn.title = "Coming Soon";
-            } else {
-                quizBtn.addEventListener('click', () => startQuiz(i));
+            if (!isLocked) {
+                quizCol.querySelector('.quiz-item-card').addEventListener('click', () => startQuiz(i));
             }
-            quizList.appendChild(quizBtn);
+            
+            quizList.appendChild(quizCol);
         }
 
         switchView('quizzes');
+    }
+
+    // Add listener for back to categories button
+    const backToCatBtn = document.getElementById('btn-back-to-categories');
+    if (backToCatBtn) {
+        backToCatBtn.addEventListener('click', () => switchView('categories'));
     }
 
     function startQuiz(index) {
@@ -286,8 +323,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Results/Review Actions
     document.getElementById('btn-review').addEventListener('click', showReview);
-    document.getElementById('btn-back-categories').addEventListener('click', () => switchView('categories'));
-    document.getElementById('btn-back-categories-2').addEventListener('click', () => switchView('categories'));
+    document.getElementById('btn-back-categories').addEventListener('click', () => {
+        // Just go back to quiz list for the current category
+        switchView('quizzes');
+    });
+    document.getElementById('btn-back-categories-2').addEventListener('click', () => switchView('results'));
+    
+    // Quit Quiz
+    const quitBtn = document.getElementById('btn-quit-quiz');
+    if (quitBtn) {
+        quitBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to quit this exam? Your progress will be lost.")) {
+                clearInterval(timerInterval);
+                switchView('quizzes');
+            }
+        });
+    }
 
     function showReview() {
         const reviewList = document.getElementById('review-list');
