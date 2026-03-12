@@ -19,20 +19,20 @@
     <link href="css/main.css" rel="stylesheet">
     <link href="css/pages/reservation.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
 </head>
 
 <body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg fixed-top bg-white border-bottom shadow-sm">
+     <!-- Full Site Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-scrolled shadow-sm">
         <div class="container-fluid px-4 px-lg-5 py-2">
             <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
                 <img src="images/Licensify-Logo2.png" class="logo-icon" alt="Licensify">
                 <span class="fw-bold fs-4 heading-font text-dark-green">Licensify</span>
             </a>
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false"
-                aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="bi bi-list fs-1 text-dark-green"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
@@ -41,20 +41,18 @@
                     <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.html#topics">Study</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.html#practice-test">Practice Test</a></li>
-                    <li class="nav-item"><a class="nav-link text-orange fw-bold" href="reservation.html">Book
-                            Lessons</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="index.html#practice">Book Lessons</a></li>
                 </ul>
                 <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
-                    <a href="#"
-                        class="text-decoration-none fw-bold fs-7 text-uppercase text-dark-green pe-lg-3">Login</a>
-                    <a href="#" class="btn btn-primary btn-rounded px-4 py-2 fw-semibold shadow-sm">Sign Up</a>
+                    <a href="#" class="btn btn-primary btn-rounded px-4 py-2 fw-semibold shadow-sm">Student Portal</a>
                 </div>
             </div>
         </div>
     </nav>
 
+    
     <!-- Reservation Header -->
-    <header class="reservation-hero">
+    <header class="reservation-hero animate-fade">
         <div class="container text-center">
             <h1 class="display-4 fw-bold reservation-title mb-3">Book Your Next Driving Lesson</h1>
             <p class="lead text-muted mx-auto" style="max-width: 600px;">
@@ -64,7 +62,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container mb-5 pb-5">
+    <main class="container mb-5 pb-5 animate-fade" style="animation-duration: 1s; animation-delay: 0.1s; opacity: 0;">
         <div class="row g-5">
 
             <!-- Left Column: Trainer Profiles -->
@@ -75,7 +73,7 @@
                         style="width: 100%; max-width: 250px; font-weight: 400; font-size: 1rem;">
                         <input type="text" id="trainer-search" class="form-control rounded-pill shadow-none"
                             style="padding-right: 2.5rem; background-color: var(--color-bg-offwhite); border: 1px solid var(--color-dark-green); color: var(--color-dark-green) !important; font-size: 0.95rem; line-height: 1.5;"
-                          placeholder="Search by name...">
+                            placeholder="Search by name...">
                         <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
                     </div>
                 </div>
@@ -200,6 +198,8 @@
 
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- Custom Reservation JS -->
     <script src="js/modules/reservation.js"></script>
 </body>

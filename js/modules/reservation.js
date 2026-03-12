@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
         '2026-03-22': { date: 'March 22, 2026', time: '01:30 PM', trainer: 'Sarah Jenkins', car: 'Automatic' }
     };
 
+    const todayObj = new Date();
+    const todayStr = todayObj.getFullYear() + '-' + String(todayObj.getMonth() + 1).padStart(2, '0') + '-' + String(todayObj.getDate()).padStart(2, '0');
+    let currentCalMonth = todayObj.getMonth();
+    let currentCalYear = todayObj.getFullYear();
+
     const trainersContainer = document.getElementById('trainers-container');
     const calendarDays = document.getElementById('calendar-days');
     const rdPanel = document.getElementById('reservation-details-panel');
@@ -46,6 +51,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const rdCar = document.getElementById('rd-car');
     const toastContainer = document.getElementById('toast-container');
     const trainerSearchInput = document.getElementById('trainer-search');
+
+    const calendarHeaderTitle = document.querySelector('.calendar-header h4');
+    const prevMonthBtn = document.querySelectorAll('.calendar-header button')[0];
+    const nextMonthBtn = document.querySelectorAll('.calendar-header button')[1];
+
+    if (prevMonthBtn) {
+        prevMonthBtn.addEventListener('click', () => {
+            currentCalMonth--;
+            if (currentCalMonth < 0) {
+                currentCalMonth = 11;
+                currentCalYear--;
+            }
+            renderCalendar();
+            hideReservationDetails();
+        });
+    }
+
+    if (nextMonthBtn) {
+        nextMonthBtn.addEventListener('click', () => {
+            currentCalMonth++;
+            if (currentCalMonth > 11) {
+                currentCalMonth = 0;
+                currentCalYear++;
+            }
+            renderCalendar();
+            hideReservationDetails();
+        });
+    }
 
     // 1. Render Trainers
     function renderTrainers(trainersList = trainers) {
@@ -80,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         <div class="booking-form">
                             <label class="b-form-label">Select Date:</label>
-                            <input type="date" class="b-form-control mb-3" id="date-${trainer.id}" min="2026-03-01">
+                            <input type="text" class="b-form-control mb-3" placeholder="Select Date..." id="date-${trainer.id}">
                             
                             <label class="b-form-label">Available Timeslots:</label>
                             <div class="timeslots-container mb-3" id="slots-${trainer.id}">
@@ -100,38 +133,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let selectedSlot = null;
 
-            // Handle date selection
-            dateInput.addEventListener('change', (e) => {
-                const selectedDate = e.target.value;
-                if (!selectedDate) {
-                    slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
-                    bookBtn.classList.add('d-none');
-                    return;
-                }
+            // Initialize Flatpickr for beautiful calendar
+            flatpickr(dateInput, {
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (!dateStr) {
+                        slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
+                        bookBtn.classList.add('d-none');
+                        return;
+                    }
 
-                // Render slots
-                slotsContainer.innerHTML = '';
-                availableSlots.forEach(slot => {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = 'timeslot';
-                    slotEl.innerText = slot;
+                    // Render slots
+                    slotsContainer.innerHTML = '';
+                    availableSlots.forEach(slot => {
+                        // Check if this slot on this date is already booked
+                        const isBooked = reservations[dateStr] && reservations[dateStr].time === slot;
+                        
+                        const slotEl = document.createElement('div');
+                        slotEl.className = 'timeslot';
+                        slotEl.innerText = slot;
+                        
+                        if (isBooked) {
+                            slotEl.classList.add('disabled');
+                            slotEl.title = 'Already Reserved';
+                        } else {
+                            slotEl.addEventListener('click', () => {
+                                // remove selected from others
+                                slotsContainer.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
+                                slotEl.classList.add('selected');
+                                selectedSlot = slot;
+                                bookBtn.classList.remove('d-none');
+                            });
+                        }
 
-                    slotEl.addEventListener('click', () => {
-                        // remove selected from others
-                        slotsContainer.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
-                        slotEl.classList.add('selected');
-                        selectedSlot = slot;
-                        bookBtn.classList.remove('d-none');
+                        slotsContainer.appendChild(slotEl);
                     });
-
-                    slotsContainer.appendChild(slotEl);
-                });
+                }
             });
 
             // Handle Booking
             bookBtn.addEventListener('click', () => {
                 const dateVal = dateInput.value; // YYYY-MM-DD
                 if (dateVal && selectedSlot) {
+                    // Check if duplicate
+                    if (reservations[dateVal] && reservations[dateVal].time === selectedSlot) {
+                        alert("This time slot is already reserved. Please choose a different one.");
+                        return;
+                    }
+
                     // Save mock reservation
                     const prettyDate = new Date(dateVal).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     reservations[dateVal] = {
@@ -145,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Reset form
                     dateInput.value = '';
+                    dateInput._flatpickr.clear();
                     slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
                     bookBtn.classList.add('d-none');
                     selectedSlot = null;
@@ -157,13 +208,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Render Calendar (Hardcoded to March 2026 for demonstration)
+    // 2. Render Calendar
     function renderCalendar() {
         calendarDays.innerHTML = '';
 
-        // Month details (March 2026 starts on Sunday)
-        const daysInMonth = 31;
-        const startDayOffset = 0; // 0 = Sunday
+        const firstDay = new Date(currentCalYear, currentCalMonth, 1);
+        const startDayOffset = firstDay.getDay(); 
+        const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+        
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        if (calendarHeaderTitle) calendarHeaderTitle.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
 
         // Fill empty days initially if month doesn't start on Sunday
         for (let i = 0; i < startDayOffset; i++) {
@@ -178,7 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dayEl.innerText = i;
 
             // Format check (YYYY-MM-DD)
-            const dateStr = `2026-03-${i < 10 ? '0' + i : i}`;
+            const m = String(currentCalMonth + 1).padStart(2, '0');
+            const dStr = String(i).padStart(2, '0');
+            const dateStr = `${currentCalYear}-${m}-${dStr}`;
 
             if (reservations[dateStr]) {
                 dayEl.classList.add('reserved');
