@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const stepEl = document.createElement('div');
-            stepEl.className = `roadmap-step status-${status}`;
+            stepEl.className = `roadmap-step status-${status} scroll-animate`;
             stepEl.innerHTML = `
                 <div class="roadmap-point d-none d-md-flex">
                     ${status === 'completed' ? '<i class="bi bi-check-lg" style="font-size: 2rem;"></i>' : index + 1}
@@ -264,6 +264,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             roadmapContainer.appendChild(stepEl);
         });
+
+        // Initialize scroll animations using Intersection Observer
+        setTimeout(() => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll('#roadmap-steps .scroll-animate').forEach(el => {
+                observer.observe(el);
+            });
+        }, 50);
     }
 
     // Expose functionality globally for inline onclick
