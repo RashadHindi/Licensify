@@ -40,9 +40,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (currentSection) {
                 navLinks.forEach((link) => {
+                    const href = link.getAttribute("href");
+                    
+                    // If on exams page, keep Practice Test active
+                    if (window.location.pathname.includes('exams.html')) {
+                        link.classList.remove("active");
+                        if (href.includes("#practice-test")) {
+                            link.classList.add("active");
+                        }
+                        return;
+                    }
+
+                    // On other pages (like index), follow scroll position
                     link.classList.remove("active");
-                    if (link.getAttribute("href") === `#${currentSection}` ||
-                        link.getAttribute("href") === `index.html#${currentSection}`) {
+                    if (href === `#${currentSection}` || href === `index.html#${currentSection}`) {
+                        link.classList.add("active");
+                    }
+                });
+            } else if (window.location.pathname.includes('exams.html')) {
+                // Special case for exams page if no sections are found/visible
+                navLinks.forEach((link) => {
+                    link.classList.remove("active");
+                    if (link.getAttribute("href").includes("#practice-test")) {
                         link.classList.add("active");
                     }
                 });
