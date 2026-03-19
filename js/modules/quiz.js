@@ -19,8 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Push initial state
     if (!history.state) {
-        history.replaceState({ view: 'categories' }, '', '#view-categories');
+        history.replaceState({ view: 'categories' }, '', window.location.pathname);
     }
+    
+    // Ensure we start at the top of the page
+    window.scrollTo(0, 0);
 
     // Initialize Categories
     function initCategories() {
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
         headerSection.classList.remove('header-minimal', 'header-hidden', 'd-none');
 
         switch (viewName) {
-            case 'categories':
+            case 'categories':  
                 titleEl.textContent = "Theory Practice";
                 subtitleEl.textContent = "Choose your license category and begin your journey toward a successful driving test.";
                 break;
@@ -381,4 +384,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize
     initCategories();
+    switchView('categories', false);
 });
