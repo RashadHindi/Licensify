@@ -51,6 +51,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // If on study page, keep Study active
+                    if (window.location.pathname.includes('study.html')) {
+                        link.classList.remove("active");
+                        if (href.includes("#topics")) {
+                            link.classList.add("active");
+                        }
+                        return;
+                    }
+
                     // On other pages (like index), follow scroll position
                     link.classList.remove("active");
                     if (href === `#${currentSection}` || href === `index.html#${currentSection}`) {
@@ -62,6 +71,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 navLinks.forEach((link) => {
                     link.classList.remove("active");
                     if (link.getAttribute("href").includes("#practice-test")) {
+                        link.classList.add("active");
+                    }
+                });
+            } else if (window.location.pathname.includes('study.html')) {
+                // Special case for study page
+                navLinks.forEach((link) => {
+                    link.classList.remove("active");
+                    if (link.getAttribute("href").includes("#topics")) {
                         link.classList.add("active");
                     }
                 });
