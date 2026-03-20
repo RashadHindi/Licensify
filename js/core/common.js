@@ -110,9 +110,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+
 // Modern Auth Modal Logic Setup
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Inject Modal HTML into body to avoid merge conflicts and repetition
     const modalHTML = `
     <div class="auth-modal-overlay" id="auth-modal">
         <div class="auth-modal-container">
@@ -127,11 +127,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div id="auth-alert" class="auth-message"></div>
 
                 <!-- Login Form -->
-                <form id="login-form" class="auth-form active">
-                    <button type="button" class="social-auth-btn">
-                        <i class="bi bi-google text-danger fs-5"></i> Continue with Google
+                <form id="login-form" class="auth-form active" novalidate>
+                    <button type="button" class="social-auth-btn social-not-configured">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="social-icon"> Continue with Google
                     </button>
-                    <button type="button" class="social-auth-btn">
+                    <button type="button" class="social-auth-btn social-not-configured">
                         <i class="bi bi-facebook text-primary fs-5"></i> Continue with Facebook
                     </button>
 
@@ -139,14 +139,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     <div class="auth-input-group">
                         <label>Email Address</label>
-                        <input type="email" id="login-email" class="auth-input" placeholder="you@example.com" required>
+                        <input type="email" id="login-email" class="auth-input" placeholder="you@example.com">
+                        <div class="error-text">This Field is Required</div>
                     </div>
                     <div class="auth-input-group">
-                        <label class="d-flex justify-content-between">
-                            <span>Password</span>
-                            <a href="#" class="text-orange text-decoration-none fw-normal">Forgot Password?</a>
-                        </label>
-                        <input type="password" id="login-password" class="auth-input" placeholder="Enter your password" required>
+                        <label>Password</label>
+                        <input type="password" id="login-password" class="auth-input" placeholder="Enter your password">
+                        <div class="error-text">This Field is Required</div>
+                        <div class="text-end mt-1">
+                            <a href="#" id="link-forgot-password" class="text-orange text-decoration-none fw-normal" style="font-size: 0.85rem;">Forgot Password?</a>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold mt-2 hover-lift">Log In</button>
                     
@@ -155,53 +157,129 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 </form>
 
-                <!-- Signup Form -->
-                <form id="signup-form" class="auth-form">
-                    <button type="button" class="social-auth-btn">
-                        <i class="bi bi-google text-danger fs-5"></i> Continue with Google
+                <!-- Forgot Password (Email Form) -->
+                <form id="forgot-email-form" class="auth-form" novalidate>
+                    <div class="auth-input-group">
+                        <label>Enter your Email Address</label>
+                        <input type="email" id="forgot-email" class="auth-input" placeholder="you@example.com">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold mt-2 hover-lift">Send Code</button>
+                    <div class="auth-footer-text">
+                        <a href="#" class="link-back-login">Back to Login</a>
+                    </div>
+                </form>
+
+                <!-- Forgot Password (Verify Code) -->
+                <form id="forgot-verify-form" class="auth-form" novalidate>
+                    <div class="auth-input-group">
+                        <label>Verification Code</label>
+                        <input type="text" id="forgot-verify-code" class="auth-input text-center fs-4 letter-spacing-1" placeholder="• • • • • •" maxlength="6">
+                        <div class="error-text text-center">This Field is Required</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold mt-2 hover-lift">Verify Code</button>
+                    <div class="auth-footer-text mt-3 text-center">
+                        Didn't receive it? <a href="#" class="resend-code">Resend Code</a>
+                    </div>
+                </form>
+
+                <!-- Forgot Password (Reset) -->
+                <form id="forgot-reset-form" class="auth-form" novalidate>
+                    <div class="auth-input-group">
+                        <label>New Password</label>
+                        <input type="password" id="forgot-new-pass" class="auth-input" placeholder="Create new password">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="forgot-confirm-pass" class="auth-input" placeholder="Confirm new password">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold mt-2 hover-lift">Reset Password</button>
+                </form>
+
+                <!-- Signup Step 1 Form -->
+                <form id="signup-step1" class="auth-form" novalidate>
+                    <button type="button" class="social-auth-btn social-not-configured">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" class="social-icon"> Continue with Google
                     </button>
-                    <button type="button" class="social-auth-btn">
+                    <button type="button" class="social-auth-btn social-not-configured">
                         <i class="bi bi-facebook text-primary fs-5"></i> Continue with Facebook
                     </button>
 
                     <div class="auth-divider"><span>or sign up with email</span></div>
 
-                    <div class="row">
-                        <div class="col-6 auth-input-group">
-                            <label>First Name</label>
-                            <input type="text" id="signup-fname" class="auth-input" placeholder="First Name" required>
-                        </div>
-                        <div class="col-6 auth-input-group">
-                            <label>Last Name</label>
-                            <input type="text" id="signup-lname" class="auth-input" placeholder="Last Name" required>
-                        </div>
-                    </div>
                     <div class="auth-input-group">
                         <label>Email Address</label>
-                        <input type="email" id="signup-email" class="auth-input" placeholder="you@example.com" required>
+                        <input type="email" id="signup-email" class="auth-input" placeholder="you@example.com">
+                        <div class="error-text">This Field is Required</div>
                     </div>
-                    <div class="auth-input-group">
-                        <label>Password</label>
-                        <input type="password" id="signup-password" class="auth-input" placeholder="Create a strong password" required>
-                    </div>
-                    <div class="auth-input-group">
-                        <label>Confirm Password</label>
-                        <input type="password" id="signup-confirm" class="auth-input" placeholder="Confirm your password" required>
-                    </div>
-                    
-                    <div class="auth-checkbox-group mt-3">
-                        <input type="checkbox" id="signup-terms" required>
-                        <label for="signup-terms">I agree to the <a href="#">Privacy Policy</a>, <a href="#">Terms of Use</a> and <a href="#">Terms of Service</a>.</label>
-                    </div>
-                    <div class="auth-checkbox-group mb-4">
-                        <input type="checkbox" id="signup-marketing">
-                        <label for="signup-marketing">I agree to receive marketing notifications with offers and news.</label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold hover-lift">Create Account</button>
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold mt-2 hover-lift">Continue</button>
                     
                     <div class="auth-footer-text">
                         Already have an account? <a href="#" id="link-to-login">Log in</a>
+                    </div>
+                </form>
+
+                <!-- Signup Step 2 Form -->
+                <form id="signup-step2" class="auth-form" novalidate>
+                    <div class="row">
+                        <div class="col-6 auth-input-group">
+                            <label>First Name</label>
+                            <input type="text" id="signup-fname" class="auth-input" placeholder="First Name">
+                            <div class="error-text">This Field is Required</div>
+                        </div>
+                        <div class="col-6 auth-input-group">
+                            <label>Last Name</label>
+                            <input type="text" id="signup-lname" class="auth-input" placeholder="Last Name">
+                            <div class="error-text">This Field is Required</div>
+                        </div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Password</label>
+                        <input type="password" id="signup-password" class="auth-input" placeholder="Create a strong password">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Confirm Password</label>
+                        <input type="password" id="signup-confirm" class="auth-input" placeholder="Confirm your password">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    
+                    <div class="auth-checkbox-group flex-column mt-3">
+                        <div class="d-flex w-100">
+                            <input type="checkbox" id="signup-terms" class="me-2">
+                            <label for="signup-terms" class="m-0 mt-1">I agree to the <a href="#">Privacy Policy</a>, <a href="#">Terms of Use</a> and <a href="#">Terms of Service</a>.</label>
+                        </div>
+                        <div class="error-text w-100">This Field is Required</div>
+                    </div>
+                    <div class="auth-checkbox-group flex-column mb-4">
+                        <div class="d-flex w-100">
+                            <input type="checkbox" id="signup-marketing" class="me-2">
+                            <label for="signup-marketing" class="m-0 mt-1">I agree to receive marketing notifications with offers and news.</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold hover-lift">Create Account</button>
+                    <div class="auth-footer-text mt-2">
+                        <a href="#" class="link-back-step1" style="font-weight: 500;">Back</a>
+                    </div>
+                </form>
+
+                <!-- Signup Verify Form -->
+                <form id="signup-verify" class="auth-form" novalidate>
+                    <div class="text-center mb-4 text-muted" style="font-size: 0.9rem;">
+                        We've sent a code to your email.<br>
+                        Time remaining: <span id="verify-timer" class="fw-bold text-dark-green">02:00</span>
+                    </div>
+                    <div class="auth-input-group">
+                        <label>Verification Code</label>
+                        <input type="text" id="signup-verify-code" class="auth-input text-center fs-4 letter-spacing-1" placeholder="• • • • • •" maxlength="6">
+                        <div class="error-text text-center">This Field is Required</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-rounded w-100 py-3 fw-bold hover-lift mt-3">Verify & Complete</button>
+                    <div class="auth-footer-text mt-3 text-center">
+                        Didn't receive it? <a href="#" class="resend-code">Resend Code</a>
                     </div>
                 </form>
             </div>
@@ -211,58 +289,157 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-    // 2. Auth Modal Logic
     const modal = document.getElementById('auth-modal');
     const closeBtn = document.getElementById('auth-modal-close');
     const modalTitle = document.getElementById('auth-modal-title');
     const modalSubtitle = document.getElementById('auth-modal-subtitle');
     const alertBox = document.getElementById('auth-alert');
 
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
+    const forms = {
+        login: document.getElementById('login-form'),
+        signupStep1: document.getElementById('signup-step1'),
+        signupStep2: document.getElementById('signup-step2'),
+        signupVerify: document.getElementById('signup-verify'),
+        forgotEmail: document.getElementById('forgot-email-form'),
+        forgotVerify: document.getElementById('forgot-verify-form'),
+        forgotReset: document.getElementById('forgot-reset-form')
+    };
 
-    const linkToSignup = document.getElementById('link-to-signup');
-    const linkToLogin = document.getElementById('link-to-login');
+    let timerInterval = null;
+    let expectedVerifyCode = '';
+    let signupEmailPending = '';
+    let resendTimerInterval = null;
 
     function openModal(defaultView = 'login') {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         switchView(defaultView);
         hideAlert();
+        clearAllErrors();
     }
 
     function closeModal() {
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        loginForm.reset();
-        signupForm.reset();
+        Object.values(forms).forEach(f => f && f.reset());
         hideAlert();
+        clearAllErrors();
+        if (timerInterval) clearInterval(timerInterval);
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
     }
 
     function switchView(viewName) {
         hideAlert();
+        clearAllErrors();
+        Object.values(forms).forEach(f => {
+            if (f) f.classList.remove('active');
+        });
+
+        document.querySelectorAll('.resend-code').forEach(btn => {
+            btn.style.pointerEvents = 'auto';
+            btn.style.color = '';
+            btn.style.textDecoration = '';
+            btn.innerText = 'Resend Code';
+        });
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
+
         if (viewName === 'login') {
-            signupForm.classList.remove('active');
-            loginForm.classList.add('active');
+            forms.login.classList.add('active');
             modalTitle.innerText = 'Welcome Back';
             modalSubtitle.innerText = 'Log in to continue your learning journey.';
-        } else {
-            loginForm.classList.remove('active');
-            signupForm.classList.add('active');
+        } else if (viewName === 'signup1') {
+            forms.signupStep1.classList.add('active');
             modalTitle.innerText = 'Create an Account';
             modalSubtitle.innerText = 'Join Licensify to master your driving theory.';
+        } else if (viewName === 'signup2') {
+            forms.signupStep2.classList.add('active');
+            modalTitle.innerText = 'Provide Details';
+            modalSubtitle.innerText = 'Complete your profile information.';
+        } else if (viewName === 'signup-verify') {
+            forms.signupVerify.classList.add('active');
+            modalTitle.innerText = 'Verify Email';
+            modalSubtitle.innerText = 'Check your inbox for the code.';
+        } else if (viewName === 'forgot-email') {
+            forms.forgotEmail.classList.add('active');
+            modalTitle.innerText = 'Forgot Password';
+            modalSubtitle.innerText = 'Enter your email to receive a code.';
+        } else if (viewName === 'forgot-verify') {
+            forms.forgotVerify.classList.add('active');
+            modalTitle.innerText = 'Verify Code';
+            modalSubtitle.innerText = 'Check your inbox for the reset code.';
+        } else if (viewName === 'forgot-reset') {
+            forms.forgotReset.classList.add('active');
+            modalTitle.innerText = 'Reset Password';
+            modalSubtitle.innerText = 'Create a new secure password.';
         }
     }
 
     function showAlert(message, type = 'error') {
+        if (!message) {
+            hideAlert();
+            return;
+        }
         alertBox.innerText = message;
         alertBox.style.display = 'block';
-        alertBox.className = `auth-message \${type}`;
+        alertBox.className = `auth-message ${type}`;
     }
 
     function hideAlert() {
-        alertBox.style.display = 'none';
-        alertBox.className = 'auth-message';
+        if(alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.className = 'auth-message';
+        }
+    }
+
+    function validateField(inputEl, conditionFunc, customErrorMsg = "This Field is Required") {
+        const parent = inputEl.closest('.auth-input-group') || inputEl.closest('.auth-checkbox-group');
+        let errorText = parent ? parent.querySelector('.error-text') : null;
+        
+        const isInvalid = !conditionFunc();
+
+        if (isInvalid) {
+            inputEl.classList.add('input-error');
+            if(errorText) {
+                errorText.innerText = customErrorMsg;
+                errorText.classList.add('active');
+            }
+            return false;
+        } else {
+            inputEl.classList.remove('input-error');
+            if(errorText) errorText.classList.remove('active');
+            return true;
+        }
+    }
+
+    function checkEmailFormat(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
+    }
+
+    function clearAllErrors() {
+        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+        document.querySelectorAll('.error-text.active').forEach(el => el.classList.remove('active'));
+    }
+
+    function startTimer(durationSeconds, displayEl) {
+        if (timerInterval) clearInterval(timerInterval);
+        let timer = durationSeconds;
+        
+        displayEl.innerText = formatTime(timer);
+        timerInterval = setInterval(() => {
+            timer--;
+            if (timer < 0) {
+                clearInterval(timerInterval);
+                displayEl.innerText = "00:00";
+            } else {
+                displayEl.innerText = formatTime(timer);
+            }
+        }, 1000);
+    }
+    
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
     }
 
     // Event Listeners for UI
@@ -274,16 +451,38 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
     });
 
-    linkToSignup.addEventListener('click', (e) => {
+    document.getElementById('link-to-signup').addEventListener('click', (e) => {
         e.preventDefault();
-        switchView('signup');
+        switchView('signup1');
     });
-    linkToLogin.addEventListener('click', (e) => {
+    document.getElementById('link-to-login').addEventListener('click', (e) => {
         e.preventDefault();
         switchView('login');
     });
+    document.getElementById('link-forgot-password').addEventListener('click', (e) => {
+        e.preventDefault();
+        switchView('forgot-email');
+    });
+    document.querySelectorAll('.link-back-login').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView('login');
+        });
+    });
+    document.querySelectorAll('.link-back-step1').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchView('signup1');
+        });
+    });
 
-    // Link triggers (Auto-binding to navbar buttons globally)
+    document.querySelectorAll('.social-not-configured').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAlert('Social login requires a backend database to securely map users.', 'error');
+        });
+    });
+
     const initAuthTriggers = () => {
         document.querySelectorAll('a, button').forEach(el => {
             const text = el.innerText.trim().toLowerCase();
@@ -295,21 +494,60 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (text === 'sign up') {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
-                    openModal('signup');
+                    openModal('signup1');
                 });
             }
         });
     };
     initAuthTriggers();
 
-    // Expose functionality globally for later UI modules
+    function updateNavbarForUser(user) {
+        document.querySelectorAll('.navbar a, .navbar button').forEach(el => {
+            const text = el.innerText.trim().toLowerCase();
+            if (text === 'login' || text === 'student portal') {
+                const container = el.parentElement;
+                if (container) {
+                    container.innerHTML = `
+        <div class="dropdown">
+            <button class="btn btn-outline-dark btn-rounded d-flex align-items-center gap-2 dropdown-toggle shadow-sm" type="button" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 6px 16px; background-color: var(--color-white); border: 1.5px solid #d0d7d4;">
+                <div class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.9rem;">
+                    ${user.fname.charAt(0).toUpperCase()}
+                </div>
+                <span class="fw-bold text-dark-green" style="font-size: 0.95rem;">${user.fname}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 220px; z-index: 1050; padding: 12px 0;">
+                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Account Menu</h6></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-person fs-5"></i> Profile</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-clock-history fs-5"></i> Activities</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-gear fs-5"></i> Settings</a></li>
+                <li><hr class="dropdown-divider my-2"></li>
+                <li><a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-3" href="#" id="logout-btn" style="font-size: 0.9rem;"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></li>
+            </ul>
+        </div>`;
+                    const logoutBtn = document.getElementById('logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            sessionStorage.removeItem('licensify_current_user');
+                            window.location.reload();
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    const currentUser = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+    if (currentUser) {
+        updateNavbarForUser(currentUser);
+    }
+
     window.authApp = {
         openLogin: () => openModal('login'),
-        openSignup: () => openModal('signup'),
+        openSignup: () => openModal('signup1'),
         requireAuth: (callback) => {
             const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
             if (users.length > 0) {
-                // Pseudo logged in state for demo
                 callback();
             } else {
                 openModal('login');
@@ -317,64 +555,227 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // 3. Fake Auth Logic using localStorage
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const pass = document.getElementById('login-password').value;
+    // FORM SUBMISSIONS
 
-        if (!email || !pass) {
-            return showAlert('Please fill in all fields.');
+    // Login Form
+    forms.login.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const emailEl = document.getElementById('login-email');
+        const passEl = document.getElementById('login-password');
+        
+        let isEmailValid = validateField(emailEl, () => emailEl.value.trim() !== '');
+        if (isEmailValid) {
+            isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
         }
+        const isPassValid = validateField(passEl, () => passEl.value !== '');
+
+        if (!isEmailValid || !isPassValid) return;
+
+        const email = emailEl.value.trim();
+        const pass = passEl.value;
 
         const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
         const user = users.find(u => u.email === email && u.password === pass);
 
         if (user) {
-            showAlert(`Welcome back, \${user.fname}! Logging you in...`, 'success');
-            setTimeout(() => {
-                closeModal();
-            }, 1000);
+            sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+            showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
+            updateNavbarForUser(user);
+            setTimeout(() => closeModal(), 1000);
         } else {
             showAlert('Invalid email or password.');
         }
     });
 
-    signupForm.addEventListener('submit', (e) => {
+    // Signup Step 1
+    forms.signupStep1.addEventListener('submit', (e) => {
         e.preventDefault();
-        const fname = document.getElementById('signup-fname').value.trim();
-        const lname = document.getElementById('signup-lname').value.trim();
-        const email = document.getElementById('signup-email').value.trim();
-        const pass = document.getElementById('signup-password').value;
-        const confirm = document.getElementById('signup-confirm').value;
-        const terms = document.getElementById('signup-terms').checked;
+        hideAlert();
+        const emailEl = document.getElementById('signup-email');
+        
+        let isEmailValid = validateField(emailEl, () => emailEl.value.trim() !== '');
+        if (isEmailValid) {
+            isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
+        }
+        
+        if (isEmailValid) {
+            const email = emailEl.value.trim();
+            const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+            
+            if (users.find(u => u.email === email)) {
+                showAlert('An account with this email already exists.', 'error');
+                return;
+            }
 
-        if (!fname || !lname || !email || !pass || !confirm) {
-            return showAlert('Please fill in all required fields.');
+            signupEmailPending = email;
+            switchView('signup2');
+        }
+    });
+
+    // Signup Step 2
+    forms.signupStep2.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideAlert();
+        const fnameEl = document.getElementById('signup-fname');
+        const lnameEl = document.getElementById('signup-lname');
+        const passEl = document.getElementById('signup-password');
+        const confEl = document.getElementById('signup-confirm');
+        const termsEl = document.getElementById('signup-terms');
+
+        const vFname = validateField(fnameEl, () => fnameEl.value.trim() !== '');
+        const vLname = validateField(lnameEl, () => lnameEl.value.trim() !== '');
+        const vPass = validateField(passEl, () => passEl.value !== '');
+        const vConf = validateField(confEl, () => confEl.value !== '');
+        const vTerms = validateField(termsEl, () => termsEl.checked);
+        
+        if (!vFname || !vLname || !vPass || !vConf || !vTerms) return;
+        
+        if (passEl.value !== confEl.value) {
+            showAlert('Passwords do not match.', 'error');
+            return;
         }
 
-        if (pass !== confirm) {
-            return showAlert('Passwords do not match.');
-        }
+        // Send logic
+        expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[LICENSIFY DEMO] Signup code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+        
+        switchView('signup-verify');
+        startTimer(120, document.getElementById('verify-timer'));
+    });
 
-        if (!terms) {
-            return showAlert('You must agree to the terms to continue.');
+    // Signup Verify
+    forms.signupVerify.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideAlert();
+        const codeEl = document.getElementById('signup-verify-code');
+        const vCode = validateField(codeEl, () => codeEl.value.trim() !== '');
+
+        if (!vCode) return;
+
+        if (codeEl.value.trim() === expectedVerifyCode) {
+            const fname = document.getElementById('signup-fname').value.trim();
+            const lname = document.getElementById('signup-lname').value.trim();
+            const pass = document.getElementById('signup-password').value;
+            
+            const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+            const newUser = { fname, lname, email: signupEmailPending, password: pass };
+            users.push(newUser);
+            localStorage.setItem('licensify_users', JSON.stringify(users));
+            sessionStorage.setItem('licensify_current_user', JSON.stringify(newUser));
+
+            showAlert('Account Created Successfully!', 'success');
+            updateNavbarForUser(newUser);
+            if (timerInterval) clearInterval(timerInterval);
+            forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
+
+            setTimeout(() => {
+                closeModal();
+                forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
+            }, 1500);
+        } else {
+            showAlert('Invalid verification code.', 'error');
+        }
+    });
+
+    // Forgot Password - Send Code
+    forms.forgotEmail.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideAlert();
+        const emailEl = document.getElementById('forgot-email');
+        let isEmailValid = validateField(emailEl, () => emailEl.value.trim() !== '');
+        if (isEmailValid) {
+            isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
+        }
+        
+        if (!isEmailValid) return;
+
+        signupEmailPending = emailEl.value.trim();
+        expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[LICENSIFY DEMO] Forgot Password code for ${signupEmailPending}: ${expectedVerifyCode}`);
+
+        switchView('forgot-verify');
+    });
+
+    // Forgot Password - Verify Code
+    forms.forgotVerify.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideAlert();
+        const codeEl = document.getElementById('forgot-verify-code');
+        const vCode = validateField(codeEl, () => codeEl.value.trim() !== '');
+        if (!vCode) return;
+
+        if (codeEl.value.trim() === expectedVerifyCode) {
+            switchView('forgot-reset');
+        } else {
+            showAlert('Invalid code.', 'error');
+        }
+    });
+
+    // Forgot Password - Reset
+    forms.forgotReset.addEventListener('submit', (e) => {
+        e.preventDefault();
+        hideAlert();
+        const newPassEl = document.getElementById('forgot-new-pass');
+        const confPassEl = document.getElementById('forgot-confirm-pass');
+
+        const vNew = validateField(newPassEl, () => newPassEl.value !== '');
+        const vConf = validateField(confPassEl, () => confPassEl.value !== '');
+
+        if (!vNew || !vConf) return;
+
+        if (newPassEl.value !== confPassEl.value) {
+            showAlert('Passwords do not match.', 'error');
+            return;
         }
 
         const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-        if (users.find(u => u.email === email)) {
-            return showAlert('An account with this email already exists.');
+        const userIndex = users.findIndex(u => u.email === signupEmailPending);
+
+        if (userIndex !== -1) {
+            users[userIndex].password = newPassEl.value;
+            localStorage.setItem('licensify_users', JSON.stringify(users));
         }
 
-        users.push({ fname, lname, email, password: pass });
-        localStorage.setItem('licensify_users', JSON.stringify(users));
-
-        showAlert('Account created successfully! Logging you in...', 'success');
-
+        showAlert('Password reset successfully! Redirecting to login...', 'success');
         setTimeout(() => {
-            closeModal();
-            loginForm.reset();
-            signupForm.reset();
-        }, 1000);
+            switchView('login');
+        }, 1500);
     });
+
+    // Resend Code Logic
+    document.querySelectorAll('.resend-code').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (btn.style.pointerEvents === 'none') return;
+            
+            // Generate new code
+            expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+            console.log(`[LICENSIFY DEMO] New Verification Code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+            showAlert('A new code has been sent to your email.', 'success');
+
+            // Disable for 60 seconds
+            let timeLeft = 60;
+            btn.style.pointerEvents = 'none';
+            btn.style.color = '#cbd5e1';
+            btn.style.textDecoration = 'none';
+            btn.innerText = `Wait ${timeLeft}s`;
+            
+            if (resendTimerInterval) clearInterval(resendTimerInterval);
+            resendTimerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(resendTimerInterval);
+                    if(btn.closest('.auth-form').classList.contains('active')) {
+                        btn.style.pointerEvents = 'auto';
+                        btn.style.color = '';
+                        btn.style.textDecoration = '';
+                        btn.innerText = 'Resend Code';
+                    }
+                } else {
+                    btn.innerText = `Wait ${timeLeft}s`;
+                }
+            }, 1000);
+        });
+    });
+
 });
