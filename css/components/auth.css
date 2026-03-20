@@ -130,6 +130,27 @@
     box-shadow: 0 0 0 4px rgba(28, 77, 52, 0.1);
 }
 
+.auth-input.input-error {
+    border-color: #e53e3e !important;
+}
+
+.auth-checkbox-group input.input-error {
+    outline: 2px solid #e53e3e;
+    outline-offset: 1px;
+}
+
+.error-text {
+    color: #e53e3e;
+    font-size: 0.75rem;
+    margin-top: 4px;
+    display: none;
+    text-align: left;
+    font-weight: 500;
+}
+.error-text.active {
+    display: block;
+}
+
 .auth-checkbox-group {
     display: flex;
     align-items: flex-start;
@@ -168,11 +189,23 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
     transition: all 0.2s;
     border: 1.5px solid #e2e8f0;
     background: var(--color-white);
     color: var(--color-text-main);
+    position: relative;
+}
+
+.social-auth-btn i, .social-auth-btn img.social-icon {
+    position: absolute;
+    left: 16px;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .social-auth-btn:hover {
