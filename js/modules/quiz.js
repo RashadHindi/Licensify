@@ -130,21 +130,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const quizCol = document.createElement('div');
             quizCol.className = 'col-md-4 col-sm-6';
             
-            const isLocked = i >= availableQuizzes.length;
+            const isComingSoon = i >= availableQuizzes.length;
+            const isGuest = !window.authApp.isLoggedIn();
+            const isLockedForGuest = isGuest && i >= 2; // Only first 2 are free
             
             quizCol.innerHTML = `
-                <div class="quiz-item-card ${isLocked ? 'opacity-50' : ''}" ${isLocked ? 'style="cursor: default;"' : ''}>
+                <div class="quiz-item-card ${isComingSoon ? 'opacity-50' : ''} ${isLockedForGuest ? 'guest-locked' : ''}" ${(isComingSoon) ? 'style="cursor: default;"' : ''}>
                     <div class="quiz-number">Practice 0${i + 1}</div>
-                    <h4 class="heading-font">${isLocked ? 'Coming Soon' : 'Mock Theory Exam'}</h4>
-                    <p class="text-muted small mb-4">A complete set of 30 randomized questions to test your readiness.</p>
+                    <h4 class="heading-font">${isComingSoon ? 'Coming Soon' : 'Mock Theory Exam'}</h4>
+                    <p class="text-muted small mb-4">${isLockedForGuest ? 'Sign in to unlock all practice exams and track your progress.' : 'A complete set of 30 randomized questions to test your readiness.'}</p>
                     <div class="btn-start">
-                        <i class="bi ${isLocked ? 'bi-lock-fill' : 'bi-arrow-right'}"></i>
+                        <i class="bi ${isComingSoon ? 'bi-lock-fill' : (isLockedForGuest ? 'bi-shield-lock' : 'bi-arrow-right')}"></i>
                     </div>
                 </div>
             `;
 
-            if (!isLocked) {
-                quizCol.querySelector('.quiz-item-card').addEventListener('click', () => startQuiz(i));
+            if (!isComingSoon) {
+                quizCol.querySelector('.quiz-item-card').addEventListener('click', () => {
+                    if (isLockedForGuest) {
+                        window.authApp.openLogin();
+                    } else {
+                        startQuiz(i);
+                    }
+                });
             }
             
             quizList.appendChild(quizCol);

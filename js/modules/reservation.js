@@ -32,10 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const availableSlots = ["09:00 AM", "11:00 AM", "01:30 PM", "03:00 PM", "04:30 PM"];
 
     // State: Mock user reservations { '2026-03-15': { ...details } }
-    const reservations = {
+    const defaultReservations = {
         '2026-03-15': { date: 'March 15, 2026', time: '09:00 AM', trainer: 'John Smith', car: 'Manual' },
         '2026-03-22': { date: 'March 22, 2026', time: '01:30 PM', trainer: 'Sarah Jenkins', car: 'Automatic' }
     };
+    const reservations = window.authApp.getUserData('reservations') || defaultReservations;
 
     const todayObj = new Date();
     const todayStr = todayObj.getFullYear() + '-' + String(todayObj.getMonth() + 1).padStart(2, '0') + '-' + String(todayObj.getDate()).padStart(2, '0');
@@ -174,6 +175,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Handle Booking
             bookBtn.addEventListener('click', () => {
+                if (!window.authApp.isLoggedIn()) {
+                    window.authApp.openLogin();
+                    return;
+                }
+
                 const dateVal = dateInput.value; // YYYY-MM-DD
                 if (dateVal && selectedSlot) {
                     // Check if duplicate
@@ -190,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         trainer: trainer.name,
                         car: trainer.carType
                     };
+                    window.authApp.saveUserData('reservations', reservations);
 
                     showToast(`Successfully booked ${trainer.name} on ${prettyDate} at ${selectedSlot}.`);
 

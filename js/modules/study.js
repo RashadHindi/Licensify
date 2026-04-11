@@ -40,14 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
-    // Initialize progress tracking
-    let progress = JSON.parse(localStorage.getItem('studyProgress')) || {
-        'traffic-signs': 'in-progress',
+    // Initialize progress tracking using the persistence helper
+    const defaultProgress = {
+        'traffic-signs': 'not-started',
         'road-rules': 'not-started',
         'driving-situations': 'not-started',
         'safety-basics': 'not-started',
         'practice-test': 'not-started'
     };
+    
+    let progress = window.authApp.getUserData('study_progress') || defaultProgress;
 
     const roadmapContainer = document.getElementById('roadmap-steps');
     const viewRoadmap = document.getElementById('view-roadmap');
@@ -287,6 +289,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = topicsData[topicId];
             if (!data) return;
 
+            // Mark as in-progress if not started
+            if (progress[topicId] === 'not-started') {
+                progress[topicId] = 'in-progress';
+                window.authApp.saveUserData('study_progress', progress);
+                renderRoadmap();
+            }
+
             topicTitle.innerText = data.title;
             topicBadge.innerText = data.badge;
             topicContent.innerHTML = '';
@@ -384,11 +393,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         toggleTopicStatus: function (topicId) {
+            if (!window.authApp.isLoggedIn()) {
+                window.authApp.openLogin();
+                return;
+            }
+
             const isCompleted = progress[topicId] === 'completed';
 
             if (isCompleted) {
                 progress[topicId] = 'in-progress';
-                localStorage.setItem('studyProgress', JSON.stringify(progress));
+                window.authApp.saveUserData('study_progress', progress);
                 renderRoadmap();
                 // Stay on current page and update button
                 this.openTopic(topicId);
@@ -402,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         progress[nextId] = 'in-progress';
                     }
                 }
-                localStorage.setItem('studyProgress', JSON.stringify(progress));
+                window.authApp.saveUserData('study_progress', progress);
                 renderRoadmap();
                 // When marked as complete, redirect back to roadmap
                 if (btnBackRoadmap) btnBackRoadmap.click();

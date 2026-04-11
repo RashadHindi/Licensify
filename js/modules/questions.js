@@ -54,6 +54,38 @@ const quizData = {
                     correctAnswer: 1,
                     explanation: "In most urban residential areas, the default speed limit is 50 km/h for safety."
                 }
+            ],
+            // Quiz 3 - New
+            [
+                {
+                    id: 1,
+                    text: "What should you do when you see an ambulance behind you with sirens and flashing lights?",
+                    image: null,
+                    options: [
+                        "Speed up to stay ahead of it",
+                        "Stop immediately in the middle of the road",
+                        "Safely pull over to the right and let it pass",
+                        "Keep driving at your current speed"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "Emergency vehicles always have priority. Pull over safely to allow them to pass."
+                }
+            ],
+            // Quiz 4 - New
+            [
+                {
+                    id: 1,
+                    text: "Which of the following is considered a major distraction while driving?",
+                    image: null,
+                    options: [
+                        "Listening to a podcast at low volume",
+                        "Checking a text message on your phone",
+                        "Looking at the speedometer",
+                        "Using the windshield wipers"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "Mobile phone usage is a primary source of driver distraction and a leading cause of accidents."
+                }
             ]
         ],
         'motorcycle': [

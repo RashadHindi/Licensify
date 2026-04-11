@@ -22,6 +22,16 @@
     <link href="css/pages/home.css" rel="stylesheet">
 
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <script>
+        (function() {
+            const user = sessionStorage.getItem('licensify_current_user');
+            if (user) {
+                document.documentElement.classList.add('auth-is-logged-in');
+            } else {
+                document.documentElement.classList.add('auth-is-guest');
+            }
+        })();
+    </script>
 </head>
 
 <body data-bs-spy="scroll" data-bs-target=".navbar" data-bs-offset="100">
@@ -56,10 +66,13 @@
                         <a class="nav-link" href="#practice">Book Lessons</a>
                     </li>
                 </ul>
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
+                <div class="navbar-auth-guest-wrapper d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
                     <a href="#"
                         class="text-decoration-none fw-bold fs-7 text-uppercase text-dark-green pe-lg-3">Login</a>
                     <a href="#" class="btn btn-primary btn-rounded px-4 py-2 fw-semibold shadow-sm">Sign Up</a>
+                </div>
+                <div class="navbar-auth-user-wrapper mt-3 mt-lg-0">
+                    <!-- JS will inject dropdown here -->
                 </div>
             </div>
         </div>

@@ -136,3 +136,22 @@
         font-size: 1.25rem !important;
     }
 }
+
+/* Auth Visibility (Flicker Fix) */
+.navbar-auth-guest-wrapper {
+    display: flex; /* Default show, but inline script will hide if logged in */
+}
+
+.auth-is-logged-in .navbar-auth-guest-wrapper {
+    display: none !important;
+}
+
+/* User dropdown is always injected by JS, 
+   but we can prepare its container if needed */
+.navbar-auth-user-wrapper {
+    display: none;
+}
+
+.auth-is-logged-in .navbar-auth-user-wrapper {
+    display: flex !important;
+}

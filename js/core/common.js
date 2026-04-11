@@ -496,18 +496,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     e.preventDefault();
                     openModal('signup1');
                 });
+            } else if (text.includes('book your first lesson')) {
+                el.addEventListener('click', (e) => {
+                    if (!window.authApp.isLoggedIn()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.authApp.openLogin('reservation.html');
+                    }
+                });
             }
         });
     };
     initAuthTriggers();
-
     function updateNavbarForUser(user) {
-        document.querySelectorAll('.navbar a, .navbar button').forEach(el => {
-            const text = el.innerText.trim().toLowerCase();
-            if (text === 'login' || text === 'student portal') {
-                const container = el.parentElement;
-                if (container) {
-                    container.innerHTML = `
+        const userWrapper = document.querySelector('.navbar-auth-user-wrapper');
+        if (userWrapper) {
+            userWrapper.innerHTML = `
         <div class="dropdown">
             <button class="btn btn-outline-dark btn-rounded d-flex align-items-center gap-2 dropdown-toggle shadow-sm" type="button" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 6px 16px; background-color: var(--color-white); border: 1.5px solid #d0d7d4;">
                 <div class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.9rem;">
@@ -518,46 +522,90 @@ document.addEventListener('DOMContentLoaded', function () {
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 220px; z-index: 1050; padding: 12px 0;">
                 <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Account Menu</h6></li>
                 <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-person fs-5"></i> Profile</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-graph-up-arrow fs-5"></i> Performance Stats</a></li>
                 <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-clock-history fs-5"></i> Activities</a></li>
                 <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-gear fs-5"></i> Settings</a></li>
                 <li><hr class="dropdown-divider my-2"></li>
                 <li><a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-3" href="#" id="logout-btn" style="font-size: 0.9rem;"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></li>
             </ul>
         </div>`;
-                    const logoutBtn = document.getElementById('logout-btn');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            sessionStorage.removeItem('licensify_current_user');
-                            window.location.reload();
-                        });
-                    }
-                }
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.removeItem('licensify_current_user');
+                    // Clear guest data on logout as requested
+                    localStorage.removeItem('licensify_guest_data');
+                    window.location.reload();
+                });
             }
-        });
+        }
     }
 
     const currentUser = JSON.parse(sessionStorage.getItem('licensify_current_user'));
     if (currentUser) {
         updateNavbarForUser(currentUser);
+        document.documentElement.classList.add('auth-resolved');
+    } else {
+        document.documentElement.classList.add('auth-resolved');
     }
 
     window.authApp = {
-        openLogin: () => openModal('login'),
-        openSignup: () => openModal('signup1'),
-        requireAuth: (callback) => {
-            const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-            if (users.length > 0) {
+        openLogin: (redirectUrl = null) => {
+            if (redirectUrl) sessionStorage.setItem('auth_redirect', redirectUrl);
+            openModal('login');
+        },
+        openSignup: (redirectUrl = null) => {
+            if (redirectUrl) sessionStorage.setItem('auth_redirect', redirectUrl);
+            openModal('signup1');
+        },
+        getCurrentUser: () => JSON.parse(sessionStorage.getItem('licensify_current_user')),
+        isLoggedIn: () => !!sessionStorage.getItem('licensify_current_user'),
+        requireAuth: (callback, redirectUrl = null) => {
+            if (sessionStorage.getItem('licensify_current_user')) {
                 callback();
             } else {
+                if (redirectUrl) sessionStorage.setItem('auth_redirect', redirectUrl);
                 openModal('login');
             }
+        },
+        saveUserData: function(key, data) {
+            const user = this.getCurrentUser();
+            if (user) {
+                const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+                const uIndex = users.findIndex(u => u.email === user.email);
+                if (uIndex !== -1) {
+                    if (!users[uIndex].data) users[uIndex].data = {};
+                    users[uIndex].data[key] = data;
+                    localStorage.setItem('licensify_users', JSON.stringify(users));
+                    user.data = users[uIndex].data;
+                    sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                }
+            } else {
+                const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
+                guestData[key] = data;
+                localStorage.setItem('licensify_guest_data', JSON.stringify(guestData));
+            }
+        },
+        getUserData: function(key) {
+            const user = this.getCurrentUser();
+            if (user && user.data && user.data[key]) return user.data[key];
+            const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
+            return guestData[key];
         }
     };
 
-    // FORM SUBMISSIONS
+    function handlePostAuthRedirect() {
+        const redirect = sessionStorage.getItem('auth_redirect');
+        if (redirect) {
+            sessionStorage.removeItem('auth_redirect');
+            window.location.href = redirect;
+            return true;
+        }
+        return false;
+    }
 
-    // Login Form
+    // FORM SUBMISSIONS
     forms.login.addEventListener('submit', (e) => {
         e.preventDefault();
         const emailEl = document.getElementById('login-email');
@@ -568,12 +616,10 @@ document.addEventListener('DOMContentLoaded', function () {
             isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
         }
         const isPassValid = validateField(passEl, () => passEl.value !== '');
-
         if (!isEmailValid || !isPassValid) return;
 
         const email = emailEl.value.trim();
         const pass = passEl.value;
-
         const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
         const user = users.find(u => u.email === email && u.password === pass);
 
@@ -581,7 +627,9 @@ document.addEventListener('DOMContentLoaded', function () {
             sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
             showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
             updateNavbarForUser(user);
-            setTimeout(() => closeModal(), 1000);
+            setTimeout(() => {
+                if (!handlePostAuthRedirect()) window.location.reload();
+            }, 1000);
         } else {
             showAlert('Invalid email or password.');
         }
@@ -669,7 +717,7 @@ document.addEventListener('DOMContentLoaded', function () {
             forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
 
             setTimeout(() => {
-                closeModal();
+                if (!handlePostAuthRedirect()) window.location.reload();
                 forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
             }, 1500);
         } else {
