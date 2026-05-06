@@ -173,6 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            // Reschedule logic check
+            const urlParams = new URLSearchParams(window.location.search);
+            const reschedulingDate = urlParams.get('reschedule');
+            if (reschedulingDate) {
+                bookBtn.innerText = "Confirm Reschedule";
+                bookBtn.classList.remove('btn-primary');
+                bookBtn.classList.add('btn-dark-green', 'text-white');
+            }
+
             // Handle Booking
             bookBtn.addEventListener('click', () => {
                 if (!window.authApp.isLoggedIn()) {
@@ -182,14 +191,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const dateVal = dateInput.value; // YYYY-MM-DD
                 if (dateVal && selectedSlot) {
-                    // Check if duplicate
+                    const prettyDate = new Date(dateVal).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    
+                    if (reschedulingDate) {
+                        // Open Reschedule Modal
+                        document.getElementById('resched-new-date').innerText = prettyDate;
+                        document.getElementById('resched-new-time').innerText = selectedSlot;
+                        document.getElementById('resched-new-trainer').innerText = trainer.name;
+                        
+                        const rModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+                        rModal.show();
+                        
+                        // Handle Confirm button in modal
+                        document.getElementById('confirm-reschedule-btn').onclick = () => {
+                            // Delete old
+                            delete reservations[reschedulingDate];
+                            
+                            // Save new
+                            reservations[dateVal] = {
+                                date: prettyDate,
+                                time: selectedSlot,
+                                trainer: trainer.name,
+                                car: trainer.carType
+                            };
+                            window.authApp.saveUserData('reservations', reservations);
+                            
+                            rModal.hide();
+                            window.location.href = 'schedule.html';
+                        };
+                        return;
+                    }
+
+                    // Normal Booking logic
                     if (reservations[dateVal] && reservations[dateVal].time === selectedSlot) {
                         alert("This time slot is already reserved. Please choose a different one.");
                         return;
                     }
 
                     // Save mock reservation
-                    const prettyDate = new Date(dateVal).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     reservations[dateVal] = {
                         date: prettyDate,
                         time: selectedSlot,

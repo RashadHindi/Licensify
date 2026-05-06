@@ -324,6 +324,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         const wrong = currentQuestions.length - correct;
+        const scorePercentage = Math.round((correct / currentQuestions.length) * 100);
+
+        // Save result for dashboard
+        if (window.authApp) {
+            // 1. Update Test Scores History
+            const existingScores = window.authApp.getUserData('test_scores') || [];
+            const newScoreRecord = {
+                score: correct,
+                total: currentQuestions.length,
+                percentage: scorePercentage,
+                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                category: currentCategory
+            };
+            existingScores.unshift(newScoreRecord); // Add to beginning
+            window.authApp.saveUserData('test_scores', existingScores.slice(0, 10)); // Keep last 10
+            window.authApp.saveUserData('latest_test_score', newScoreRecord); // For immediate UI updates
+
+            // 2. Track Mistakes for Progress Insights
+            const mistakes = currentQuestions.filter((q, idx) => userAnswers[idx] !== q.correctAnswer).map(q => ({
+                text: q.text,
+                topic: q.topic || currentCategory, // Use specific topic if available
+                explanation: q.explanation,
+                correctAnswer: q.options[q.correctAnswer] // Save the actual answer text
+            }));
+            
+            if (mistakes.length > 0) {
+                const existingMistakes = window.authApp.getUserData('quiz_mistakes') || [];
+                // Combine and keep unique recent mistakes (last 5)
+                const updatedMistakes = [...mistakes, ...existingMistakes].filter((m, index, self) =>
+                    index === self.findIndex((t) => t.text === m.text)
+                ).slice(0, 5);
+                window.authApp.saveUserData('quiz_mistakes', updatedMistakes);
+            }
+        }
 
         document.getElementById('score-value').textContent = `${correct} / ${currentQuestions.length}`;
         document.getElementById('correct-count').textContent = correct;

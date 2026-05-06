@@ -155,3 +155,30 @@
 .auth-is-logged-in .navbar-auth-user-wrapper {
     display: flex !important;
 }
+
+/* Student Portal Dropdown Styles */
+.dropdown-item {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.dropdown-item:hover {
+    background-color: var(--color-light-green);
+    color: var(--color-dark-green);
+}
+
+.dropdown-item.active {
+    background-color: var(--color-light-green) !important;
+    color: var(--color-dark-green) !important;
+    border-left: 3px solid var(--color-dark-green);
+    font-weight: 600;
+}
+
+.dropdown-item.active i {
+    color: var(--color-dark-green) !important;
+}
+
+.dropdown-item:active {
+    background-color: var(--color-dark-green);
+    color: var(--color-white);
+}
