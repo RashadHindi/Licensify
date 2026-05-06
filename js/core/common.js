@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function hideAlert() {
-        if(alertBox) {
+        if (alertBox) {
             alertBox.style.display = 'none';
             alertBox.className = 'auth-message';
         }
@@ -394,19 +394,19 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateField(inputEl, conditionFunc, customErrorMsg = "This Field is Required") {
         const parent = inputEl.closest('.auth-input-group') || inputEl.closest('.auth-checkbox-group');
         let errorText = parent ? parent.querySelector('.error-text') : null;
-        
+
         const isInvalid = !conditionFunc();
 
         if (isInvalid) {
             inputEl.classList.add('input-error');
-            if(errorText) {
+            if (errorText) {
                 errorText.innerText = customErrorMsg;
                 errorText.classList.add('active');
             }
             return false;
         } else {
             inputEl.classList.remove('input-error');
-            if(errorText) errorText.classList.remove('active');
+            if (errorText) errorText.classList.remove('active');
             return true;
         }
     }
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function startTimer(durationSeconds, displayEl) {
         if (timerInterval) clearInterval(timerInterval);
         let timer = durationSeconds;
-        
+
         displayEl.innerText = formatTime(timer);
         timerInterval = setInterval(() => {
             timer--;
@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 1000);
     }
-    
+
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60).toString().padStart(2, '0');
         const s = (seconds % 60).toString().padStart(2, '0');
@@ -520,15 +520,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="fw-bold text-dark-green" style="font-size: 0.95rem;">${user.fname}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 220px; z-index: 1050; padding: 12px 0;">
-                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Account Menu</h6></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-person fs-5"></i> Profile</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-graph-up-arrow fs-5"></i> Performance Stats</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-clock-history fs-5"></i> Activities</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="#"><i class="bi bi-gear fs-5"></i> Settings</a></li>
+                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Student Portal</h6></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Dashboard</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="progress.html"><i class="bi bi-graph-up-arrow fs-5"></i> Progress</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="schedule.html"><i class="bi bi-calendar-check fs-5"></i> Schedule</a></li>
+                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
                 <li><hr class="dropdown-divider my-2"></li>
                 <li><a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-3" href="#" id="logout-btn" style="font-size: 0.9rem;"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></li>
             </ul>
         </div>`;
+            // Highlight active dropdown item
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                const href = item.getAttribute('href');
+                if (href && currentPath.includes(href)) {
+                    item.classList.add('active');
+                }
+            });
+
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', (e) => {
@@ -550,6 +559,30 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.classList.add('auth-resolved');
     }
 
+    // Sidebar Navigation Logic
+    const portalLinks = document.querySelectorAll('.portal-nav-link');
+    if (portalLinks.length > 0) {
+        const currentPath = window.location.pathname;
+        portalLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.includes(href)) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            sessionStorage.removeItem('licensify_current_user');
+            localStorage.removeItem('licensify_guest_data');
+            window.location.href = 'index.html';
+        });
+    }
+
     window.authApp = {
         openLogin: (redirectUrl = null) => {
             if (redirectUrl) sessionStorage.setItem('auth_redirect', redirectUrl);
@@ -569,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 openModal('login');
             }
         },
-        saveUserData: function(key, data) {
+        saveUserData: function (key, data) {
             const user = this.getCurrentUser();
             if (user) {
                 const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
@@ -587,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('licensify_guest_data', JSON.stringify(guestData));
             }
         },
-        getUserData: function(key) {
+        getUserData: function (key) {
             const user = this.getCurrentUser();
             if (user && user.data && user.data[key]) return user.data[key];
             const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
@@ -610,7 +643,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const emailEl = document.getElementById('login-email');
         const passEl = document.getElementById('login-password');
-        
+
         let isEmailValid = validateField(emailEl, () => emailEl.value.trim() !== '');
         if (isEmailValid) {
             isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
@@ -640,16 +673,16 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         hideAlert();
         const emailEl = document.getElementById('signup-email');
-        
+
         let isEmailValid = validateField(emailEl, () => emailEl.value.trim() !== '');
         if (isEmailValid) {
             isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
         }
-        
+
         if (isEmailValid) {
             const email = emailEl.value.trim();
             const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-            
+
             if (users.find(u => u.email === email)) {
                 showAlert('An account with this email already exists.', 'error');
                 return;
@@ -675,9 +708,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const vPass = validateField(passEl, () => passEl.value !== '');
         const vConf = validateField(confEl, () => confEl.value !== '');
         const vTerms = validateField(termsEl, () => termsEl.checked);
-        
+
         if (!vFname || !vLname || !vPass || !vConf || !vTerms) return;
-        
+
         if (passEl.value !== confEl.value) {
             showAlert('Passwords do not match.', 'error');
             return;
@@ -686,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Send logic
         expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
         console.log(`[LICENSIFY DEMO] Signup code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
-        
+
         switchView('signup-verify');
         startTimer(120, document.getElementById('verify-timer'));
     });
@@ -704,7 +737,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const fname = document.getElementById('signup-fname').value.trim();
             const lname = document.getElementById('signup-lname').value.trim();
             const pass = document.getElementById('signup-password').value;
-            
+
             const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
             const newUser = { fname, lname, email: signupEmailPending, password: pass };
             users.push(newUser);
@@ -734,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isEmailValid) {
             isEmailValid = validateField(emailEl, () => checkEmailFormat(emailEl.value.trim()), "Please enter a valid email address.");
         }
-        
+
         if (!isEmailValid) return;
 
         signupEmailPending = emailEl.value.trim();
@@ -795,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             if (btn.style.pointerEvents === 'none') return;
-            
+
             // Generate new code
             expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
             console.log(`[LICENSIFY DEMO] New Verification Code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
@@ -807,13 +840,13 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.style.color = '#cbd5e1';
             btn.style.textDecoration = 'none';
             btn.innerText = `Wait ${timeLeft}s`;
-            
+
             if (resendTimerInterval) clearInterval(resendTimerInterval);
             resendTimerInterval = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(resendTimerInterval);
-                    if(btn.closest('.auth-form').classList.contains('active')) {
+                    if (btn.closest('.auth-form').classList.contains('active')) {
                         btn.style.pointerEvents = 'auto';
                         btn.style.color = '';
                         btn.style.textDecoration = '';

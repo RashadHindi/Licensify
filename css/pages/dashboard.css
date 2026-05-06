@@ -1,0 +1,92 @@
+/* Student Dashboard Styles */
+
+.stats-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md) !important;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: var(--color-light-green) !important;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.feedback-content {
+    border-left: 4px solid var(--color-dark-green);
+}
+
+.smaller {
+    font-size: 0.8rem;
+}
+
+/* Sidebar Navigation */
+.portal-sidebar {
+    position: sticky;
+    top: 100px;
+}
+
+.portal-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: var(--color-text-main);
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    margin-bottom: 4px;
+}
+
+.portal-nav-link i {
+    font-size: 1.25rem;
+    opacity: 0.7;
+}
+
+.portal-nav-link:hover {
+    background-color: var(--color-light-green);
+    color: var(--color-dark-green);
+}
+
+.portal-nav-link.active {
+    background-color: var(--color-light-green);
+    color: var(--color-dark-green);
+    border-left-color: var(--color-dark-green);
+    font-weight: 600;
+}
+
+.portal-nav-link.active i {
+    opacity: 1;
+    color: var(--color-dark-green);
+}
+
+.portal-nav-link.text-danger:hover {
+    background-color: #fff5f5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .portal-sidebar {
+        position: static;
+        margin-bottom: 2rem;
+    }
+}
