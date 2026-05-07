@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container) return;
 
         const profilePhoto = window.authApp.getUserData('profile_photo');
+        const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
 
         container.innerHTML = `
             <div class="row g-4">
@@ -176,8 +177,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const fnameInput = document.getElementById('settings-fname');
         const lnameInput = document.getElementById('settings-lname');
         const phoneInput = document.getElementById('settings-phone');
+        const currentPassInput = document.getElementById('settings-current-pass');
         const newPassInput = document.getElementById('settings-new-pass');
         const confirmPassInput = document.getElementById('settings-confirm-pass');
+
 
         const nameRegex = /^[a-zA-Z\s]+$/;
         const phoneRegex = /^[0-9\+\-\s\(\)]+$/;
@@ -223,7 +226,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
+        if (currentPassInput) currentPassInput.addEventListener('input', () => {
+            if (currentPassInput.value) currentPassInput.classList.remove('is-invalid-custom');
+        });
         if (fnameInput) fnameInput.addEventListener('input', () => validateName(fnameInput));
+
         if (lnameInput) lnameInput.addEventListener('input', () => validateName(lnameInput));
         if (phoneInput) phoneInput.addEventListener('input', () => validatePhone(phoneInput));
         if (newPassInput) newPassInput.addEventListener('input', () => validatePass(newPassInput));
@@ -233,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const saveProfileBtn = document.getElementById('save-profile-btn');
         if (saveProfileBtn) {
             saveProfileBtn.addEventListener('click', () => {
+                const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
                 const fname = fnameInput.value.trim();
                 const lname = lnameInput.value.trim();
                 const phone = phoneInput.value.trim();
@@ -250,6 +258,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
+                // Check if anything actually changed
+                const isUnchanged = fname === user.fname && 
+                                   lname === user.lname && 
+                                   phone === (user.phone || '');
+                
+                if (isUnchanged) {
+                    showError('No Changes', 'You haven\'t modified any information to update.');
+                    return;
+                }
+
+                // Update Logic
+
+                // 1. Update in Session Storage
+                user.fname = fname;
+                user.lname = lname;
+                user.phone = phone;
+                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+
+                // 2. Update in Local Storage (Persistent)
+                const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+                const uIndex = users.findIndex(u => u.email === user.email);
+                if (uIndex !== -1) {
+                    users[uIndex].fname = fname;
+                    users[uIndex].lname = lname;
+                    users[uIndex].phone = phone;
+                    localStorage.setItem('licensify_users', JSON.stringify(users));
+                }
+
+                // 3. Update Navbar
+                window.authApp.updateNavbar();
+
                 const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
                 const successTitle = document.getElementById('settings-success-title');
                 const successMsg = document.getElementById('settings-success-msg');
@@ -257,15 +296,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 successTitle.textContent = 'Profile Updated!';
                 successMsg.textContent = 'Your profile information has been successfully updated.';
                 successModal.show();
+
+                // Refresh view to update profile card initials/name
+                setTimeout(() => renderSettingsView(), 500);
             });
         }
 
         // Handle Password Update
         const updatePasswordBtn = document.getElementById('update-password-btn');
+
         if (updatePasswordBtn) {
             updatePasswordBtn.addEventListener('click', () => {
+                const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+                const currentPass = currentPassInput ? currentPassInput.value : '';
                 const newPass = newPassInput.value;
                 const confirmPass = confirmPassInput.value;
+
+                // Check for empty fields
+                if (!currentPass || !newPass || !confirmPass) {
+                    showError('Empty Fields', 'Please fill in all password fields to update your security settings.');
+                    
+                    // Highlight empty fields
+                    if (!currentPass && currentPassInput) currentPassInput.classList.add('is-invalid-custom');
+                    if (!newPass) newPassInput.classList.add('is-invalid-custom');
+                    if (!confirmPass) confirmPassInput.classList.add('is-invalid-custom');
+                    return;
+                }
+
+                // Verify Current Password
+                if (currentPass !== user.password) {
+                    showError('Incorrect Password', 'The current password you entered is incorrect. Please try again.');
+                    if (currentPassInput) currentPassInput.classList.add('is-invalid-custom');
+                    return;
+                }
 
                 if (!validatePass(newPassInput)) {
                     showError('Weak Password', 'Password must be at least 8 characters long and include capital letters, numbers, and special characters.');
@@ -273,8 +336,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (!validateConfirm(confirmPassInput, newPassInput)) {
-                    showError('Mismatch', 'Passwords do not match.');
+                    showError('Mismatch', 'The new passwords do not match. Please verify and try again.');
                     return;
+                }
+
+                // Update Logic
+                // 1. Update in Session Storage
+                user.password = newPass;
+                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+
+                // 2. Update in Local Storage (Persistent)
+                const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+                const uIndex = users.findIndex(u => u.email === user.email);
+                if (uIndex !== -1) {
+                    users[uIndex].password = newPass;
+                    localStorage.setItem('licensify_users', JSON.stringify(users));
                 }
 
                 const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
@@ -284,7 +360,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 successTitle.textContent = 'Password Changed!';
                 successMsg.textContent = 'Your password has been successfully updated.';
                 successModal.show();
+
+                // Clear fields after success
+                if (currentPassInput) currentPassInput.value = '';
+                newPassInput.value = '';
+                confirmPassInput.value = '';
             });
         }
+
     }
 });

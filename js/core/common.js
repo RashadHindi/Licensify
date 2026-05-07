@@ -519,6 +519,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (userWrapper) {
             const profilePhoto = window.authApp.getUserData('profile_photo');
             const userInitial = user.fname.charAt(0).toUpperCase();
+            const isAdmin = user.role === 'admin';
 
             userWrapper.innerHTML = `
         <div class="dropdown">
@@ -529,15 +530,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="fw-bold text-dark-green" style="font-size: 0.95rem;">${user.fname}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 220px; z-index: 1050; padding: 12px 0;">
-                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Student Portal</h6></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Dashboard</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="progress.html"><i class="bi bi-graph-up-arrow fs-5"></i> Progress</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="schedule.html"><i class="bi bi-calendar-check fs-5"></i> Schedule</a></li>
-                <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
+                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">${isAdmin ? 'Admin Portal' : 'Student Portal'}</h6></li>
+                ${isAdmin ? `
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Admin Dashboard</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-students.html"><i class="bi bi-people fs-5"></i> Students</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-trainers.html"><i class="bi bi-person-badge fs-5"></i> Trainers</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-reservations.html"><i class="bi bi-calendar-check fs-5"></i> Reservations</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-feedback.html"><i class="bi bi-chat-left-text fs-5"></i> Feedback</a></li>
+                    <li><hr class="dropdown-divider my-2"></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
+
+                ` : `
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Dashboard</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="progress.html"><i class="bi bi-graph-up-arrow fs-5"></i> Progress</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="schedule.html"><i class="bi bi-calendar-check fs-5"></i> Schedule</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
+                `}
                 <li><hr class="dropdown-divider my-2"></li>
                 <li><a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-3" href="#" id="logout-btn" style="font-size: 0.9rem;"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></li>
             </ul>
+
         </div>`;
+
             // Highlight active dropdown item
             const currentPath = window.location.pathname;
             document.querySelectorAll('.dropdown-item').forEach(item => {
@@ -612,10 +626,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const currentUser = JSON.parse(sessionStorage.getItem('licensify_current_user'));
     if (currentUser) {
         updateNavbarForUser(currentUser);
-        document.documentElement.classList.add('auth-resolved');
+        document.documentElement.classList.add('auth-is-logged-in', 'auth-resolved');
     } else {
         document.documentElement.classList.add('auth-resolved');
     }
+
 
     // Sidebar Navigation Logic
     const portalLinks = document.querySelectorAll('.portal-nav-link');
@@ -671,16 +686,29 @@ document.addEventListener('DOMContentLoaded', function () {
         const user = users.find(u => u.email === email && u.password === pass);
 
         if (user) {
+            // AUTHORIZATION: Specific admin user
+            if (user.email === 'rashadhindi2004@gmail.com') {
+                user.role = 'admin';
+            } else {
+                user.role = user.role || 'student';
+            }
+
             sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
             showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
             updateNavbarForUser(user);
+            
             setTimeout(() => {
-                if (!handlePostAuthRedirect()) window.location.reload();
+                if (user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    if (!handlePostAuthRedirect()) window.location.reload();
+                }
             }, 1000);
         } else {
             showAlert('Invalid email or password.');
         }
     });
+
 
     // Signup Step 1
     forms.signupStep1.addEventListener('submit', (e) => {
