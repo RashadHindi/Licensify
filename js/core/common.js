@@ -236,6 +236,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="auth-input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="signup-phone" class="auth-input" placeholder="+1 (555) 000-0000">
+                        <div class="error-text">This Field is Required</div>
+                    </div>
+                    <div class="auth-input-group">
                         <label>Password</label>
                         <input type="password" id="signup-password" class="auth-input" placeholder="Create a strong password">
                         <div class="error-text">This Field is Required</div>
@@ -403,6 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 errorText.innerText = customErrorMsg;
                 errorText.classList.add('active');
             }
+            showAlert('Please fill in all required fields correctly.', 'error');
             return false;
         } else {
             inputEl.classList.remove('input-error');
@@ -511,11 +517,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateNavbarForUser(user) {
         const userWrapper = document.querySelector('.navbar-auth-user-wrapper');
         if (userWrapper) {
+            const profilePhoto = window.authApp.getUserData('profile_photo');
+            const userInitial = user.fname.charAt(0).toUpperCase();
+
             userWrapper.innerHTML = `
         <div class="dropdown">
             <button class="btn btn-outline-dark btn-rounded d-flex align-items-center gap-2 dropdown-toggle shadow-sm" type="button" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 6px 16px; background-color: var(--color-white); border: 1.5px solid #d0d7d4;">
-                <div class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.9rem;">
-                    ${user.fname.charAt(0).toUpperCase()}
+                <div class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center overflow-hidden" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.9rem;">
+                    ${profilePhoto ? `<img src="${profilePhoto}" class="w-100 h-100 object-fit-cover">` : userInitial}
                 </div>
                 <span class="fw-bold text-dark-green" style="font-size: 0.95rem;">${user.fname}</span>
             </button>
@@ -549,38 +558,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         }
-    }
-
-    const currentUser = JSON.parse(sessionStorage.getItem('licensify_current_user'));
-    if (currentUser) {
-        updateNavbarForUser(currentUser);
-        document.documentElement.classList.add('auth-resolved');
-    } else {
-        document.documentElement.classList.add('auth-resolved');
-    }
-
-    // Sidebar Navigation Logic
-    const portalLinks = document.querySelectorAll('.portal-nav-link');
-    if (portalLinks.length > 0) {
-        const currentPath = window.location.pathname;
-        portalLinks.forEach(link => {
-            const href = link.getAttribute('href');
-            if (href && currentPath.includes(href)) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
-    }
-
-    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
-    if (sidebarLogoutBtn) {
-        sidebarLogoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            sessionStorage.removeItem('licensify_current_user');
-            localStorage.removeItem('licensify_guest_data');
-            window.location.href = 'index.html';
-        });
     }
 
     window.authApp = {
@@ -625,8 +602,45 @@ document.addEventListener('DOMContentLoaded', function () {
             if (user && user.data && user.data[key]) return user.data[key];
             const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
             return guestData[key];
+        },
+        updateNavbar: function() {
+            const user = this.getCurrentUser();
+            if (user) updateNavbarForUser(user);
         }
     };
+
+    const currentUser = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+    if (currentUser) {
+        updateNavbarForUser(currentUser);
+        document.documentElement.classList.add('auth-resolved');
+    } else {
+        document.documentElement.classList.add('auth-resolved');
+    }
+
+    // Sidebar Navigation Logic
+    const portalLinks = document.querySelectorAll('.portal-nav-link');
+    if (portalLinks.length > 0) {
+        const currentPath = window.location.pathname;
+        portalLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath.includes(href)) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+
+    const sidebarLogoutBtn = document.getElementById('sidebar-logout-btn');
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            sessionStorage.removeItem('licensify_current_user');
+            localStorage.removeItem('licensify_guest_data');
+            window.location.href = 'index.html';
+        });
+    }
+
 
     function handlePostAuthRedirect() {
         const redirect = sessionStorage.getItem('auth_redirect');
@@ -699,17 +713,19 @@ document.addEventListener('DOMContentLoaded', function () {
         hideAlert();
         const fnameEl = document.getElementById('signup-fname');
         const lnameEl = document.getElementById('signup-lname');
+        const phoneEl = document.getElementById('signup-phone');
         const passEl = document.getElementById('signup-password');
         const confEl = document.getElementById('signup-confirm');
         const termsEl = document.getElementById('signup-terms');
 
         const vFname = validateField(fnameEl, () => fnameEl.value.trim() !== '');
         const vLname = validateField(lnameEl, () => lnameEl.value.trim() !== '');
+        const vPhone = validateField(phoneEl, () => phoneEl.value.trim() !== '');
         const vPass = validateField(passEl, () => passEl.value !== '');
         const vConf = validateField(confEl, () => confEl.value !== '');
         const vTerms = validateField(termsEl, () => termsEl.checked);
 
-        if (!vFname || !vLname || !vPass || !vConf || !vTerms) return;
+        if (!vFname || !vLname || !vPhone || !vPass || !vConf || !vTerms) return;
 
         if (passEl.value !== confEl.value) {
             showAlert('Passwords do not match.', 'error');
@@ -736,10 +752,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (codeEl.value.trim() === expectedVerifyCode) {
             const fname = document.getElementById('signup-fname').value.trim();
             const lname = document.getElementById('signup-lname').value.trim();
+            const phone = document.getElementById('signup-phone').value.trim();
             const pass = document.getElementById('signup-password').value;
 
             const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-            const newUser = { fname, lname, email: signupEmailPending, password: pass };
+            const newUser = { fname, lname, phone, email: signupEmailPending, password: pass };
             users.push(newUser);
             localStorage.setItem('licensify_users', JSON.stringify(users));
             sessionStorage.setItem('licensify_current_user', JSON.stringify(newUser));
