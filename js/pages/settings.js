@@ -49,31 +49,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label smaller fw-bold text-muted">First Name</label>
-                                    <input type="text" class="form-control rounded-3 py-2" value="${user.fname}">
+                                    <input type="text" id="settings-fname" class="form-control rounded-3 py-2" value="${user.fname}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label smaller fw-bold text-muted">Last Name</label>
-                                    <input type="text" class="form-control rounded-3 py-2" value="${user.lname}">
+                                    <input type="text" id="settings-lname" class="form-control rounded-3 py-2" value="${user.lname}">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label smaller fw-bold text-muted">Email Address</label>
                                     <input type="email" class="form-control rounded-3 py-2 bg-light" value="${user.email}" disabled>
                                     <div class="form-text smaller text-muted">Contact support to change your registered email.</div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label class="form-label smaller fw-bold text-muted">Phone Number</label>
-                                    <input type="tel" class="form-control rounded-3 py-2" value="${user.phone || ''}" placeholder="+1 234 567 890">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label smaller fw-bold text-muted">Location</label>
-                                    <select class="form-select rounded-3 py-2">
-                                        <option selected>Main City Campus</option>
-                                        <option>North Suburb Center</option>
-                                        <option>West Side Facility</option>
-                                    </select>
+                                    <input type="tel" id="settings-phone" class="form-control rounded-3 py-2" value="${user.phone || ''}" placeholder="+1 234 567 890">
                                 </div>
                                 <div class="col-12 text-end mt-4">
-                                    <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" onclick="alert('Profile updated successfully!')">Save Changes</button>
+                                    <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="save-profile-btn">Save Changes</button>
                                 </div>
                             </div>
                         </form>
@@ -84,20 +76,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         <form>
                             <div class="mb-3">
                                 <label class="form-label smaller fw-bold text-muted">Current Password</label>
-                                <input type="password" class="form-control rounded-3 py-2" placeholder="••••••••">
+                                <input type="password" id="settings-current-pass" class="form-control rounded-3 py-2" placeholder="••••••••">
                             </div>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label smaller fw-bold text-muted">New Password</label>
-                                    <input type="password" class="form-control rounded-3 py-2" placeholder="Enter new password">
+                                    <input type="password" id="settings-new-pass" class="form-control rounded-3 py-2" placeholder="Enter new password">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label smaller fw-bold text-muted">Confirm New Password</label>
-                                    <input type="password" class="form-control rounded-3 py-2" placeholder="Repeat new password">
+                                    <input type="password" id="settings-confirm-pass" class="form-control rounded-3 py-2" placeholder="Repeat new password">
                                 </div>
                             </div>
                             <div class="text-end mt-4">
-                                <button type="button" class="btn btn-outline-dark-green rounded-pill px-4 py-2 fw-bold" onclick="alert('Password updated successfully!')">Update Password</button>
+                                <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="update-password-btn">Update Password</button>
                             </div>
                         </form>
                     </div>
@@ -111,15 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" checked>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                            <div>
-                                <h6 class="fw-bold mb-0">SMS Alerts</h6>
-                                <p class="text-muted smaller mb-0">Get urgent booking changes sent to your phone.</p>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-1">
@@ -179,6 +162,129 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
+        }
+
+        // Helper to show error modal
+        function showError(title, msg) {
+            const errorModal = new bootstrap.Modal(document.getElementById('settingsErrorModal'));
+            document.getElementById('settings-error-title').textContent = title;
+            document.getElementById('settings-error-msg').textContent = msg;
+            errorModal.show();
+        }
+
+        // Real-time Validation Logic
+        const fnameInput = document.getElementById('settings-fname');
+        const lnameInput = document.getElementById('settings-lname');
+        const phoneInput = document.getElementById('settings-phone');
+        const newPassInput = document.getElementById('settings-new-pass');
+        const confirmPassInput = document.getElementById('settings-confirm-pass');
+
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        const phoneRegex = /^[0-9\+\-\s\(\)]+$/;
+        const strongPassRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        const validateName = (input) => {
+            if (input.value && !nameRegex.test(input.value)) {
+                input.classList.add('is-invalid-custom');
+                return false;
+            } else {
+                input.classList.remove('is-invalid-custom');
+                return true;
+            }
+        };
+
+        const validatePhone = (input) => {
+            if (input.value && !phoneRegex.test(input.value)) {
+                input.classList.add('is-invalid-custom');
+                return false;
+            } else {
+                input.classList.remove('is-invalid-custom');
+                return true;
+            }
+        };
+
+        const validatePass = (input) => {
+            if (input.value && !strongPassRegex.test(input.value)) {
+                input.classList.add('is-invalid-custom');
+                return false;
+            } else {
+                input.classList.remove('is-invalid-custom');
+                return true;
+            }
+        };
+
+        const validateConfirm = (input, original) => {
+            if (input.value && input.value !== original.value) {
+                input.classList.add('is-invalid-custom');
+                return false;
+            } else {
+                input.classList.remove('is-invalid-custom');
+                return true;
+            }
+        };
+
+        if (fnameInput) fnameInput.addEventListener('input', () => validateName(fnameInput));
+        if (lnameInput) lnameInput.addEventListener('input', () => validateName(lnameInput));
+        if (phoneInput) phoneInput.addEventListener('input', () => validatePhone(phoneInput));
+        if (newPassInput) newPassInput.addEventListener('input', () => validatePass(newPassInput));
+        if (confirmPassInput) confirmPassInput.addEventListener('input', () => validateConfirm(confirmPassInput, newPassInput));
+
+        // Handle Profile Save
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        if (saveProfileBtn) {
+            saveProfileBtn.addEventListener('click', () => {
+                const fname = fnameInput.value.trim();
+                const lname = lnameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                
+                if (!validateName(fnameInput)) {
+                    showError('Invalid Name', 'First name should not contain numbers or special characters.');
+                    return;
+                }
+                if (!validateName(lnameInput)) {
+                    showError('Invalid Name', 'Last name should not contain numbers or special characters.');
+                    return;
+                }
+                if (phone && !validatePhone(phoneInput)) {
+                    showError('Invalid Phone', 'Please enter a valid phone number.');
+                    return;
+                }
+
+                const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
+                const successTitle = document.getElementById('settings-success-title');
+                const successMsg = document.getElementById('settings-success-msg');
+                
+                successTitle.textContent = 'Profile Updated!';
+                successMsg.textContent = 'Your profile information has been successfully updated.';
+                successModal.show();
+            });
+        }
+
+        // Handle Password Update
+        const updatePasswordBtn = document.getElementById('update-password-btn');
+        if (updatePasswordBtn) {
+            updatePasswordBtn.addEventListener('click', () => {
+                const newPass = newPassInput.value;
+                const confirmPass = confirmPassInput.value;
+
+                if (!validatePass(newPassInput)) {
+                    showError('Weak Password', 'Password must be at least 8 characters long and include capital letters, numbers, and special characters.');
+                    return;
+                }
+
+                if (!validateConfirm(confirmPassInput, newPassInput)) {
+                    showError('Mismatch', 'Passwords do not match.');
+                    return;
+                }
+
+                const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
+                const successTitle = document.getElementById('settings-success-title');
+                const successMsg = document.getElementById('settings-success-msg');
+                
+                successTitle.textContent = 'Password Changed!';
+                successMsg.textContent = 'Your password has been successfully updated.';
+                successModal.show();
+            });
         }
     }
 });
