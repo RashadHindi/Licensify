@@ -46,8 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <p class="text-muted smaller mb-0">
                                 <i class="bi bi-person-circle me-1"></i> Trainer ${res.trainer} 
-                                <span class="mx-2 text-opacity-25">|</span>
-                                <i class="bi bi-geo-alt-fill me-1"></i> Main Campus
                             </p>
                         </div>
                         <div class="col-md-auto mt-3 mt-md-0">
