@@ -514,6 +514,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     initAuthTriggers();
+
+    /**
+     * Initialize Mock Data for Testing
+     * This ensures the ONE predefined admin account exists if no database is connected.
+     */
+    function initMockData() {
+        let users = JSON.parse(localStorage.getItem('licensify_users')) || [];
+        
+        // Check if our predefined admin exists
+        const adminEmail = 'rashadhindi2004@gmail.com';
+        const adminExists = users.some(u => u.email === adminEmail);
+        
+        if (!adminExists) {
+            // The single predefined admin for testing
+            const adminUser = { 
+                fname: 'Admin', 
+                lname: 'User', 
+                email: adminEmail, 
+                password: 'Password123!', 
+                role: 'admin', 
+                phone: '+1 234 567 890' 
+            };
+            
+            // Add some mock trainers and students for the dashboard visualization
+            const extraUsers = [
+                { fname: 'Sarah', lname: 'Johnson', email: 'sarah.trainer@licensify.com', password: 'Password123!', role: 'trainer', phone: '+1 555 0101' },
+                { fname: 'Michael', lname: 'Chen', email: 'michael.trainer@licensify.com', password: 'Password123!', role: 'trainer', phone: '+1 555 0102' },
+                { fname: 'Ahmad', lname: 'Hassan', email: 'ahmad.student@gmail.com', password: 'Password123!', role: 'student', phone: '+1 555 0201' },
+                { fname: 'Emma', lname: 'Wilson', email: 'emma.student@gmail.com', password: 'Password123!', role: 'student', phone: '+1 555 0202' }
+            ];
+            
+            users.push(adminUser, ...extraUsers);
+            localStorage.setItem('licensify_users', JSON.stringify(users));
+            console.log('[LICENSIFY] Mock admin and data initialized.');
+        }
+    }
+    initMockData();
+
     function updateNavbarForUser(user) {
         const userWrapper = document.querySelector('.navbar-auth-user-wrapper');
         if (userWrapper) {
@@ -617,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
             return guestData[key];
         },
-        updateNavbar: function() {
+        updateNavbar: function () {
             const user = this.getCurrentUser();
             if (user) updateNavbarForUser(user);
         }
@@ -696,7 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
             sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
             showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
             updateNavbarForUser(user);
-            
+
             setTimeout(() => {
                 if (user.role === 'admin') {
                     window.location.href = 'admin-dashboard.html';
@@ -784,7 +822,15 @@ document.addEventListener('DOMContentLoaded', function () {
             const pass = document.getElementById('signup-password').value;
 
             const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-            const newUser = { fname, lname, phone, email: signupEmailPending, password: pass };
+            // EVERY user who signs up is automatically a student
+            const newUser = { 
+                fname, 
+                lname, 
+                phone, 
+                email: signupEmailPending, 
+                password: pass,
+                role: 'student' 
+            };
             users.push(newUser);
             localStorage.setItem('licensify_users', JSON.stringify(users));
             sessionStorage.setItem('licensify_current_user', JSON.stringify(newUser));
