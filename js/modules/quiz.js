@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!grid) return;
 
         grid.innerHTML = '';
+        
+        // Add Standard Categories
         quizData.categories.forEach(cat => {
             const card = document.createElement('div');
             card.className = 'col-md-4 col-sm-6 mb-4';
@@ -117,49 +119,159 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectCategory(categoryId) {
         currentCategory = categoryId;
+        const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
         const catData = quizData.categories.find(c => c.id === categoryId);
+            
         document.getElementById('selected-category-name').textContent = catData.name;
 
         const quizList = document.getElementById('quiz-list');
         quizList.innerHTML = '';
 
-        // Show available quizzes (mocking 5 quizzes per category)
-        const availableQuizzes = quizData.questions[categoryId] || [];
-
-        for (let i = 0; i < 5; i++) {
-            const quizCol = document.createElement('div');
-            quizCol.className = 'col-md-4 col-sm-6';
-            
-            const isComingSoon = i >= availableQuizzes.length;
-            const isGuest = !window.authApp.isLoggedIn();
-            const isLockedForGuest = isGuest && i >= 2; // Only first 2 are free
-            
-            quizCol.innerHTML = `
-                <div class="quiz-item-card ${isComingSoon ? 'opacity-50' : ''} ${isLockedForGuest ? 'guest-locked' : ''}" ${(isComingSoon) ? 'style="cursor: default;"' : ''}>
-                    <div class="quiz-number">Practice 0${i + 1}</div>
-                    <h4 class="heading-font">${isComingSoon ? 'Coming Soon' : 'Mock Theory Exam'}</h4>
-                    <p class="text-muted small mb-4">${isLockedForGuest ? 'Sign in to unlock all practice exams and track your progress.' : 'A complete set of 30 randomized questions to test your readiness.'}</p>
-                    <div class="btn-start">
-                        <i class="bi ${isComingSoon ? 'bi-lock-fill' : (isLockedForGuest ? 'bi-shield-lock' : 'bi-arrow-right')}"></i>
+        // 1. Add "Create" Box for Admins/Trainers
+        if (user && (user.role === 'admin' || user.role === 'trainer')) {
+            const createCol = document.createElement('div');
+            createCol.className = 'col-md-4 col-sm-6';
+            createCol.innerHTML = `
+                <div class="quiz-item-card create-exam-card border-0 text-center d-flex flex-column justify-content-center align-items-center" style="background: linear-gradient(145deg, #ffffff, #f0fdf4); border: 2px dashed #a5d6a7 !important;">
+                    <div class="icon-circle mb-3" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e8f5e9; color: #2e7d32;">
+                        <i class="bi bi-plus-circle-fill fs-4"></i>
                     </div>
+                    <h4 class="heading-font text-dark-green fs-5">Create Mock Exam</h4>
+                    <p class="text-muted smaller mb-0 px-3">Add a new custom practice test to this category.</p>
                 </div>
             `;
+            createCol.querySelector('.quiz-item-card').addEventListener('click', () => {
+                if (window.openExamBuilder) window.openExamBuilder(categoryId);
+            });
+            quizList.appendChild(createCol);
+        }
 
-            if (!isComingSoon) {
-                quizCol.querySelector('.quiz-item-card').addEventListener('click', () => {
-                    if (isLockedForGuest) {
-                        window.authApp.openLogin();
-                    } else {
-                        startQuiz(i);
-                    }
-                });
+        // Get exams data
+        const availableStandard = quizData.questions[categoryId] || [];
+        const customExams = (JSON.parse(localStorage.getItem('licensify_custom_exams')) || []).filter(e => e.category === categoryId);
+        const deletedStandard = JSON.parse(localStorage.getItem('licensify_deleted_standard_exams')) || [];
+        
+        let globalIndex = 1;
+
+        // 2. Render Available Standard Exams (Filter out those deleted by admin)
+        availableStandard.forEach((quiz, idx) => {
+            const standardId = `std_${categoryId}_${idx}`;
+            if (!deletedStandard.includes(standardId)) {
+                renderExamCard(quizList, 'Mock Theory Exam', `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, false, () => startQuiz(idx), false, standardId);
+                globalIndex++;
             }
-            
-            quizList.appendChild(quizCol);
+        });
+
+        // 3. Render Custom Exams (Placed before Coming Soon)
+        customExams.forEach((exam, idx) => {
+            renderExamCard(quizList, exam.title, `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, false, () => startCustomQuiz(exam), true, exam.id);
+            globalIndex++;
+        });
+
+        // 4. Render "Coming Soon" Standard Exams (up to a total of 5 or more)
+        const totalStandardSlots = 5;
+        for (let i = availableStandard.length; i < totalStandardSlots; i++) {
+            renderExamCard(quizList, 'Coming Soon', `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, true);
+            globalIndex++;
         }
 
         switchView('quizzes');
     }
+
+    function renderExamCard(container, title, label, isComingSoon, onClick, isCustom = false, examId = null) {
+        const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+        const isGuest = !window.authApp.isLoggedIn();
+        const practiceNum = parseInt(label.replace('Practice ', ''));
+        const isLockedForGuest = isGuest && practiceNum > 2;
+
+        const quizCol = document.createElement('div');
+        quizCol.className = 'col-md-4 col-sm-6';
+        
+        // Show delete button only for admins/trainers on custom OR standard exams (if it has an ID)
+        const canDelete = !isComingSoon && examId && user && (user.role === 'admin' || user.role === 'trainer');
+
+        quizCol.innerHTML = `
+            <div class="quiz-item-card ${isComingSoon ? 'opacity-50' : ''} ${isLockedForGuest ? 'guest-locked' : ''} ${isCustom ? 'custom-quiz-card' : ''}" ${(isComingSoon) ? 'style="cursor: default;"' : ''}>
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="quiz-number">${label}</div>
+                    ${canDelete ? `
+                        <button class="btn btn-link text-danger p-0 border-0 shadow-none delete-exam-btn" title="Delete Exam" data-id="${examId}" data-custom="${isCustom}">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    ` : ''}
+                </div>
+                <h4 class="heading-font">${title}</h4>
+                <p class="text-muted small mb-4">${isLockedForGuest ? 'Sign in to unlock all practice exams and track your progress.' : 'A complete set of randomized questions to test your readiness.'}</p>
+                <div class="btn-start">
+                    <i class="bi ${isComingSoon ? 'bi-lock-fill' : (isLockedForGuest ? 'bi-shield-lock' : 'bi-arrow-right')}"></i>
+                </div>
+            </div>
+        `;
+
+        if (canDelete) {
+            quizCol.querySelector('.delete-exam-btn').addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                confirmDeleteFullExam(examId, isCustom);
+            });
+        }
+
+        if (!isComingSoon && onClick) {
+            quizCol.querySelector('.quiz-item-card').addEventListener('click', () => {
+                if (isLockedForGuest) {
+                    window.authApp.openLogin();
+                } else {
+                    onClick();
+                }
+            });
+        }
+        
+        container.appendChild(quizCol);
+    }
+
+    function confirmDeleteFullExam(examId, isCustom) {
+        const deleteModal = new bootstrap.Modal(document.getElementById('builderDeleteConfirmModal'));
+        const confirmBtn = document.getElementById('confirm-delete-q-btn');
+        
+        const modalTitle = document.querySelector('#builderDeleteConfirmModal h5');
+        const modalBody = document.querySelector('#builderDeleteConfirmModal p');
+        const originalTitle = modalTitle.textContent;
+        const originalBody = modalBody.textContent;
+
+        modalTitle.textContent = isCustom ? "Delete Custom Exam?" : "Remove Standard Exam?";
+        modalBody.textContent = "Are you sure you want to remove this mock exam from the list? This action cannot be undone.";
+        
+        deleteModal.show();
+
+        confirmBtn.onclick = () => {
+            if (isCustom) {
+                let customExams = JSON.parse(localStorage.getItem('licensify_custom_exams')) || [];
+                customExams = customExams.filter(e => e.id !== examId);
+                localStorage.setItem('licensify_custom_exams', JSON.stringify(customExams));
+            } else {
+                let deletedStandard = JSON.parse(localStorage.getItem('licensify_deleted_standard_exams')) || [];
+                if (!deletedStandard.includes(examId)) {
+                    deletedStandard.push(examId);
+                    localStorage.setItem('licensify_deleted_standard_exams', JSON.stringify(deletedStandard));
+                }
+            }
+            
+            deleteModal.hide();
+            
+            setTimeout(() => {
+                modalTitle.textContent = originalTitle;
+                modalBody.textContent = originalBody;
+            }, 500);
+
+            if (window.refreshQuizzes) window.refreshQuizzes();
+        };
+    }
+
+    // Expose refresh function to builder
+    window.refreshQuizzes = () => {
+        if (currentCategory) {
+            selectCategory(currentCategory);
+        }
+    };
 
     // Add listener for back to categories button
     const backToCatBtn = document.getElementById('btn-back-to-categories');
@@ -173,10 +285,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Randomize questions as requested
         currentQuestions = [...rawQuestions].sort(() => Math.random() - 0.5);
+        setupQuizSession();
+    }
+
+    function startCustomQuiz(exam) {
+        currentQuizIndex = -1;
+        currentQuestions = [...exam.questions];
+        setupQuizSession();
+    }
+
+    function setupQuizSession() {
         currentQuestionIndex = 0;
         userAnswers = new Array(currentQuestions.length).fill(null);
 
-        timeLeft = 40 * 60;
+        timeLeft = 30 * 60;
         startTimer();
         initQuestionNav();
         renderQuestion();
@@ -377,11 +499,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Quit Quiz
     const quitBtn = document.getElementById('btn-quit-quiz');
     if (quitBtn) {
+        const quitModal = new bootstrap.Modal(document.getElementById('quitExamModal'));
+        const confirmQuitBtn = document.getElementById('confirm-quit-btn');
+
         quitBtn.addEventListener('click', () => {
-            if (confirm("Are you sure you want to quit this exam? Your progress will be lost.")) {
-                clearInterval(timerInterval);
-                switchView('quizzes');
-            }
+            quitModal.show();
+        });
+
+        confirmQuitBtn.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            quitModal.hide();
+            switchView('quizzes');
         });
     }
 

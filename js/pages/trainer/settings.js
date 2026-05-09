@@ -1,9 +1,9 @@
 /**
- * Settings page logic
+ * Trainer Settings Logic
  */
 document.addEventListener('DOMContentLoaded', function() {
     const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
-    if (!user) return;
+    if (!user || user.role !== 'trainer') return;
     
     renderSettingsView();
 
@@ -34,16 +34,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <h5 class="fw-bold text-dark-green mb-1 heading-font">${user.fname} ${user.lname}</h5>
                         <p class="text-muted smaller mb-3">${user.email}</p>
-                        <span class="badge bg-light-green text-dark-green rounded-pill px-3 py-2 fw-medium">${user.role === 'admin' ? 'Administrator' : 'Verified Student'}</span>
+                        <span class="badge bg-light-green text-dark-green rounded-pill px-3 py-2 fw-medium">Verified Instructor</span>
                         
                         <div class="mt-4 pt-4 border-top text-start">
-                            <p class="smaller text-muted mb-2 text-uppercase fw-bold opacity-50" style="letter-spacing: 1px;">Quick Actions</p>
-                            <button class="btn btn-sm btn-light w-100 text-start py-2 mb-2 rounded-3 d-flex align-items-center gap-2">
-                                <i class="bi bi-shield-lock text-dark-green"></i> 2FA Settings
-                            </button>
-                            <button class="btn btn-sm btn-light w-100 text-start py-2 rounded-3 d-flex align-items-center gap-2">
-                                <i class="bi bi-download text-dark-green"></i> Export Data
-                            </button>
+                            <p class="smaller text-muted mb-2 text-uppercase fw-bold opacity-50" style="letter-spacing: 1px;">Shift Hours</p>
+                            <div class="p-2 bg-light rounded-3 smaller text-dark-green fw-medium">
+                                <i class="bi bi-clock-fill me-2"></i> 9:00 AM - 5:00 PM
+                            </div>
+                            <div class="p-2 bg-light rounded-3 smaller text-dark-green fw-medium mt-2">
+                                <i class="bi bi-calendar-check-fill me-2"></i> Mon - Fri
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="col-12">
                                     <label class="form-label smaller fw-bold text-muted">Email Address</label>
                                     <input type="email" class="form-control rounded-3 py-2 bg-light" value="${user.email}" disabled>
-                                    <div class="form-text smaller text-muted">Contact support to change your registered email.</div>
+                                    <div class="form-text smaller text-muted">Trainer emails are managed by administration.</div>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label smaller fw-bold text-muted">Phone Number</label>
@@ -98,28 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="update-password-btn">Update Password</button>
                             </div>
                         </form>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 p-4">
-                        <h5 class="fw-bold text-dark-green mb-4 heading-font">Notification Preferences</h5>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                            <div>
-                                <h6 class="fw-bold mb-0">Email Notifications</h6>
-                                <p class="text-muted smaller mb-0">Receive lesson reminders and updates via email.</p>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" checked>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <div>
-                                <h6 class="fw-bold mb-0">Marketing News</h6>
-                                <p class="text-muted smaller mb-0">Stay updated with new courses and discounts.</p>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" checked>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -157,17 +135,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (pendingDataUrl) {
                         imgContainer.innerHTML = `<img src="${pendingDataUrl}" class="w-100 h-100 object-fit-cover">`;
                         window.authApp.saveUserData('profile_photo', pendingDataUrl);
-                        
-                        // Immediate Navbar Update
                         window.authApp.updateNavbar();
-                        
                         previewModal.hide();
-                        
-                        // Show Success Modal
                         const successModal = new bootstrap.Modal(document.getElementById('photoSuccessModal'));
                         successModal.show();
-
-                        // Refresh view to show delete button
+                        
                         setTimeout(() => renderSettingsView(), 500);
                     }
                 };
@@ -212,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentPassInput = document.getElementById('settings-current-pass');
         const newPassInput = document.getElementById('settings-new-pass');
         const confirmPassInput = document.getElementById('settings-confirm-pass');
-
 
         const nameRegex = /^[a-zA-Z\s]+$/;
         const phoneRegex = /^[0-9\+\-\s\(\)]+$/;
@@ -262,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentPassInput.value) currentPassInput.classList.remove('is-invalid-custom');
         });
         if (fnameInput) fnameInput.addEventListener('input', () => validateName(fnameInput));
-
         if (lnameInput) lnameInput.addEventListener('input', () => validateName(lnameInput));
         if (phoneInput) phoneInput.addEventListener('input', () => validatePhone(phoneInput));
         if (newPassInput) newPassInput.addEventListener('input', () => validatePass(newPassInput));
@@ -278,11 +248,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const phone = phoneInput.value.trim();
                 
                 if (!validateName(fnameInput)) {
-                    showError('Invalid Name', 'First name should not contain numbers or special characters.');
+                    showError('Invalid Name', 'First name should not contain numbers.');
                     return;
                 }
                 if (!validateName(lnameInput)) {
-                    showError('Invalid Name', 'Last name should not contain numbers or special characters.');
+                    showError('Invalid Name', 'Last name should not contain numbers.');
                     return;
                 }
                 if (phone && !validatePhone(phoneInput)) {
@@ -290,25 +260,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                // Check if anything actually changed
-                const isUnchanged = fname === user.fname && 
-                                   lname === user.lname && 
-                                   phone === (user.phone || '');
-                
-                if (isUnchanged) {
-                    showError('No Changes', 'You haven\'t modified any information to update.');
-                    return;
-                }
-
                 // Update Logic
-
-                // 1. Update in Session Storage
                 user.fname = fname;
                 user.lname = lname;
                 user.phone = phone;
                 sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
 
-                // 2. Update in Local Storage (Persistent)
                 const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
                 const uIndex = users.findIndex(u => u.email === user.email);
                 if (uIndex !== -1) {
@@ -318,25 +275,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     localStorage.setItem('licensify_users', JSON.stringify(users));
                 }
 
-                // 3. Update Navbar
                 window.authApp.updateNavbar();
-
                 const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
-                const successTitle = document.getElementById('settings-success-title');
-                const successMsg = document.getElementById('settings-success-msg');
-                
-                successTitle.textContent = 'Profile Updated!';
-                successMsg.textContent = 'Your profile information has been successfully updated.';
+                document.getElementById('settings-success-title').textContent = 'Profile Updated!';
+                document.getElementById('settings-success-msg').textContent = 'Your profile information has been successfully updated.';
                 successModal.show();
-
-                // Refresh view to update profile card initials/name
+                
                 setTimeout(() => renderSettingsView(), 500);
             });
         }
 
         // Handle Password Update
         const updatePasswordBtn = document.getElementById('update-password-btn');
-
         if (updatePasswordBtn) {
             updatePasswordBtn.addEventListener('click', () => {
                 const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
@@ -344,40 +294,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newPass = newPassInput.value;
                 const confirmPass = confirmPassInput.value;
 
-                // Check for empty fields
                 if (!currentPass || !newPass || !confirmPass) {
-                    showError('Empty Fields', 'Please fill in all password fields to update your security settings.');
-                    
-                    // Highlight empty fields
-                    if (!currentPass && currentPassInput) currentPassInput.classList.add('is-invalid-custom');
-                    if (!newPass) newPassInput.classList.add('is-invalid-custom');
-                    if (!confirmPass) confirmPassInput.classList.add('is-invalid-custom');
+                    showError('Empty Fields', 'Please fill in all password fields.');
                     return;
                 }
 
-                // Verify Current Password
                 if (currentPass !== user.password) {
-                    showError('Incorrect Password', 'The current password you entered is incorrect. Please try again.');
-                    if (currentPassInput) currentPassInput.classList.add('is-invalid-custom');
+                    showError('Incorrect Password', 'The current password you entered is incorrect.');
                     return;
                 }
 
                 if (!validatePass(newPassInput)) {
-                    showError('Weak Password', 'Password must be at least 8 characters long and include capital letters, numbers, and special characters.');
+                    showError('Weak Password', 'Password must be at least 8 characters with a mix of cases, numbers, and symbols.');
                     return;
                 }
 
                 if (!validateConfirm(confirmPassInput, newPassInput)) {
-                    showError('Mismatch', 'The new passwords do not match. Please verify and try again.');
+                    showError('Mismatch', 'New passwords do not match.');
                     return;
                 }
 
-                // Update Logic
-                // 1. Update in Session Storage
                 user.password = newPass;
                 sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
-
-                // 2. Update in Local Storage (Persistent)
                 const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
                 const uIndex = users.findIndex(u => u.email === user.email);
                 if (uIndex !== -1) {
@@ -386,19 +324,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
-                const successTitle = document.getElementById('settings-success-title');
-                const successMsg = document.getElementById('settings-success-msg');
-                
-                successTitle.textContent = 'Password Changed!';
-                successMsg.textContent = 'Your password has been successfully updated.';
+                document.getElementById('settings-success-title').textContent = 'Password Changed!';
+                document.getElementById('settings-success-msg').textContent = 'Your password has been successfully updated.';
                 successModal.show();
-
-                // Clear fields after success
-                if (currentPassInput) currentPassInput.value = '';
+                
+                currentPassInput.value = '';
                 newPassInput.value = '';
                 confirmPassInput.value = '';
             });
         }
-
     }
 });

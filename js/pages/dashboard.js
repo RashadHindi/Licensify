@@ -55,6 +55,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 5. Notifications
         renderNotifications(reservations, progressPercent);
+
+        // 6. Trainer Feedback
+        renderTrainerFeedback(user);
+    }
+
+    function renderTrainerFeedback(user) {
+        const feedbackContainer = document.getElementById('trainer-feedback-list');
+        if (!feedbackContainer) return;
+
+        const allFeedback = JSON.parse(localStorage.getItem('licensify_trainer_feedback')) || [];
+        const myFeedback = allFeedback.filter(f => f.studentName === `${user.fname} ${user.lname}`)
+                                     .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (myFeedback.length === 0) {
+            feedbackContainer.innerHTML = '<p class="text-center text-muted py-4">No feedback received yet. Keep up the good work!</p>';
+            return;
+        }
+
+        feedbackContainer.innerHTML = myFeedback.map(f => `
+            <div class="feedback-item mb-4 pb-4 border-bottom last-child-border-0">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-dark-green text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">
+                        ${f.trainerName.charAt(0)}
+                    </div>
+                    <div>
+                        <p class="fw-bold text-dark-green mb-0">${f.trainerName}</p>
+                        <p class="text-muted smaller mb-0">${f.date}</p>
+                    </div>
+                </div>
+                <div class="feedback-content bg-light-green p-3 rounded-3">
+                    <p class="text-dark-green mb-0 italic">"${f.message}"</p>
+                </div>
+            </div>
+        `).join('');
     }
 
     function renderNotifications(reservations, progressPercent) {

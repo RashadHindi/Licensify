@@ -169,6 +169,25 @@
         </div>
     </div>
 
+    <!-- Photo Delete Confirmation Modal -->
+    <div class="modal fade" id="photoDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
+                <div class="modal-body p-5">
+                    <div class="icon-box bg-light-red text-danger rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: #fff5f5;">
+                        <i class="bi bi-trash3 fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-green heading-font mb-2">Remove Photo?</h4>
+                    <p class="text-muted mb-4 small">Are you sure you want to remove your profile photo and go back to initials?</p>
+                    <div class="d-flex flex-column gap-2">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="confirm-delete-photo-btn">Yes, Remove it</button>
+                        <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Settings Success Modal -->
     <div class="modal fade" id="settingsSuccessModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">

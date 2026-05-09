@@ -1,7 +1,7 @@
 /**
  * Reservations Management Logic
  */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     renderReservations();
     initFilters();
 });

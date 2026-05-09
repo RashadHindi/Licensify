@@ -23,6 +23,14 @@
     background-color: var(--color-light-green) !important;
 }
 
+.bg-light-red {
+    background-color: var(--color-red-light) !important;
+}
+
+.text-danger {
+    color: var(--color-red) !important;
+}
+
 .fs-7 {
     font-size: 0.875rem !important;
 }

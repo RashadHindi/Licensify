@@ -142,6 +142,18 @@
                 ];
                 localStorage.setItem('licensify_exams', JSON.stringify(mockExams));
             }
+            // 4. Mock Feedback
+            let feedback = JSON.parse(localStorage.getItem('licensify_feedback')) || [];
+            if (feedback.length === 0) {
+                const mockFeedback = [
+                    { id: 1, studentName: 'Ahmad Hassan', trainerName: 'Sarah Johnson', rating: 5, comment: 'Excellent trainer! Very patient and explains everything clearly.', date: '2026-05-01' },
+                    { id: 2, studentName: 'Emma Wilson', trainerName: 'Michael Chen', rating: 4, comment: 'Good lesson, but we started 5 mins late.', date: '2026-05-03' },
+                    { id: 3, studentName: 'Ahmad Hassan', trainerName: 'Michael Chen', rating: 5, comment: 'Finally mastered the reverse parking thanks to Michael!', date: '2026-05-05' },
+                    { id: 4, studentName: 'John Doe', trainerName: 'Sarah Johnson', rating: 2, comment: 'The car was a bit messy and the trainer was late.', date: '2026-05-06' },
+                    { id: 5, studentName: 'Jane Smith', trainerName: 'Sarah Johnson', rating: 5, comment: 'Amazing experience, highly recommended!', date: '2026-05-07' }
+                ];
+                localStorage.setItem('licensify_feedback', JSON.stringify(mockFeedback));
+            }
         }
     };
 
