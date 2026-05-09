@@ -558,6 +558,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const profilePhoto = window.authApp.getUserData('profile_photo');
             const userInitial = user.fname.charAt(0).toUpperCase();
             const isAdmin = user.role === 'admin';
+            const isTrainer = user.role === 'trainer';
+            const portalName = isAdmin ? 'Admin Portal' : (isTrainer ? 'Trainer Portal' : 'Student Portal');
 
             userWrapper.innerHTML = `
         <div class="dropdown">
@@ -568,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span class="fw-bold text-dark-green" style="font-size: 0.95rem;">${user.fname}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2" aria-labelledby="userProfileDropdown" style="min-width: 220px; z-index: 1050; padding: 12px 0;">
-                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">${isAdmin ? 'Admin Portal' : 'Student Portal'}</h6></li>
+                <li><h6 class="dropdown-header text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">${portalName}</h6></li>
                 ${isAdmin ? `
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Admin Dashboard</a></li>
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-students.html"><i class="bi bi-people fs-5"></i> Students</a></li>
@@ -577,13 +579,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-feedback.html"><i class="bi bi-chat-left-text fs-5"></i> Feedback</a></li>
                     <li><hr class="dropdown-divider my-2"></li>
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="admin-settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
-
+                ` : (isTrainer ? `
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="trainer-dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Dashboard</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="trainer-schedule.html"><i class="bi bi-calendar3 fs-5"></i> My Schedule</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="trainer-students.html"><i class="bi bi-people fs-5"></i> My Students</a></li>
+                    <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="trainer-settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
                 ` : `
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="dashboard.html"><i class="bi bi-speedometer2 fs-5"></i> Dashboard</a></li>
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="progress.html"><i class="bi bi-graph-up-arrow fs-5"></i> Progress</a></li>
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="schedule.html"><i class="bi bi-calendar-check fs-5"></i> Schedule</a></li>
                     <li><a class="dropdown-item py-2 fw-medium text-dark-green d-flex align-items-center gap-3" href="settings.html"><i class="bi bi-gear fs-5"></i> Settings</a></li>
-                `}
+                `)}
                 <li><hr class="dropdown-divider my-2"></li>
                 <li><a class="dropdown-item py-2 fw-bold text-danger d-flex align-items-center gap-3" href="#" id="logout-btn" style="font-size: 0.9rem;"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></li>
             </ul>
@@ -738,6 +744,8 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 if (user.role === 'admin') {
                     window.location.href = 'admin-dashboard.html';
+                } else if (user.role === 'trainer') {
+                    window.location.href = 'trainer-dashboard.html';
                 } else {
                     if (!handlePostAuthRedirect()) window.location.reload();
                 }

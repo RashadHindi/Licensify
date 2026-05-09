@@ -15,6 +15,8 @@
     <!-- Custom CSS -->
     <link href="css/main.css" rel="stylesheet">
     <link href="css/pages/dashboard.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-off-white">
 
@@ -33,6 +35,7 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1 gap-lg-4 fs-6 fw-medium text-uppercase text-tracking">
                     <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="study.html">Study</a></li>
                     <li class="nav-item"><a class="nav-link" href="exams.html">Practice Test</a></li>
                     <li class="nav-item"><a class="nav-link" href="reservation.html">Book Lessons</a></li>
@@ -53,9 +56,63 @@
 
                 <!-- Main Content -->
                 <div class="col-lg-9 animate-fade">
+                    <!-- Stats Overview -->
+                    <div class="row g-4 mb-4 fade-up-element visible">
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stats-card">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-box bg-light-green text-warning rounded-3 p-2">
+                                        <i class="bi bi-star-fill fs-4"></i>
+                                    </div>
+                                    <span class="fw-bold text-muted small text-uppercase">Average Rating</span>
+                                </div>
+                                <div class="d-flex align-items-end gap-2">
+                                    <h3 class="fw-bold text-dark-green mb-0" id="avg-rating">0.0</h3>
+                                    <span class="text-muted smaller mb-1">/ 5.0</span>
+                                </div>
+                                <div id="avg-stars" class="mt-2 text-warning fs-5"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stats-card">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-box bg-light-green text-dark-green rounded-3 p-2">
+                                        <i class="bi bi-chat-left-dots fs-4"></i>
+                                    </div>
+                                    <span class="fw-bold text-muted small text-uppercase">Total Reviews</span>
+                                </div>
+                                <h3 class="fw-bold text-dark-green mb-1" id="total-reviews">0</h3>
+                                <p class="text-muted smaller mb-0">Across all categories</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 stats-card">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="icon-box bg-light-red text-danger rounded-3 p-2" style="background-color: #fff5f5;">
+                                        <i class="bi bi-exclamation-triangle fs-4"></i>
+                                    </div>
+                                    <span class="fw-bold text-muted small text-uppercase">Critical Alerts</span>
+                                </div>
+                                <h3 class="fw-bold text-danger mb-1" id="critical-alerts">0</h3>
+                                <p class="text-muted smaller mb-0">Unresolved 1-2 star reviews</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-4 p-4">
+                                <h5 class="fw-bold text-dark-green heading-font mb-4">Rating Distribution</h5>
+                                <div style="height: 250px;">
+                                    <canvas id="ratingChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                         <div class="card-header bg-white border-0 py-4 px-4 d-flex justify-content-between align-items-center">
-                            <h4 class="fw-bold text-dark-green heading-font mb-0">Student Feedback</h4>
+                            <h4 class="fw-bold text-dark-green heading-font mb-0">Detailed Feedback</h4>
                             <select id="trainer-feedback-filter" class="form-select form-select-sm rounded-pill px-3" style="width: 180px;">
                                 <option value="all">All Trainers</option>
                             </select>

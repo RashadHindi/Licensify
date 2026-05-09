@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Settings | Licensify Admin</title>
+    <meta name="description" content="Update your personal details and preferences on your Licensify trainer account settings.">
+    <title>Trainer Settings - Licensify</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +17,24 @@
     <!-- Custom CSS -->
     <link href="css/main.css" rel="stylesheet">
     <link href="css/pages/dashboard.css" rel="stylesheet">
+
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <script>
+        (function() {
+            const userStr = sessionStorage.getItem('licensify_current_user');
+            if (!userStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const user = JSON.parse(userStr);
+            if (user.role !== 'trainer') {
+                window.location.href = 'index.html';
+            }
+            document.documentElement.classList.add('auth-is-logged-in');
+        })();
+    </script>
 </head>
+
 <body class="bg-off-white">
 
     <!-- Navbar -->
@@ -43,13 +62,34 @@
         </div>
     </nav>
 
-    <!-- Admin Content -->
+    <!-- Content -->
     <main class="py-6 mt-5">
         <div class="container">
             <div class="row">
                 <!-- Sidebar -->
                 <div class="col-lg-3 mb-4">
-                    <div id="sidebar-container"></div>
+                    <div id="trainer-sidebar-container">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 portal-sidebar">
+                            <div class="nav flex-column gap-2">
+                                <a href="trainer-dashboard.html" class="portal-nav-link">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                                <a href="trainer-schedule.html" class="portal-nav-link">
+                                    <i class="bi bi-calendar4-week"></i> My Schedule
+                                </a>
+                                <a href="trainer-students.html" class="portal-nav-link">
+                                    <i class="bi bi-people"></i> My Students
+                                </a>
+                                <a href="trainer-settings.html" class="portal-nav-link active">
+                                    <i class="bi bi-gear"></i> Settings
+                                </a>
+                                <hr class="my-3 mx-3 opacity-10">
+                                <a href="#" id="sidebar-logout-btn" class="portal-nav-link text-danger">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Main Content -->
@@ -57,7 +97,7 @@
                     <div class="row mb-5 fade-up-element visible">
                         <div class="col-12">
                             <h1 class="display-5 fw-bold text-dark-green heading-font mb-2">Account Settings</h1>
-                            <p class="lead text-muted">Manage your profile information and account preferences.</p>
+                            <p class="lead text-muted">Manage your trainer profile information and account preferences.</p>
                         </div>
                     </div>
 
@@ -74,7 +114,7 @@
         </div>
     </main>
 
-    <!-- Modals (Copied from settings.html for consistency) -->
+    <!-- Photo Preview Modal -->
     <div class="modal fade" id="photoPreviewModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -89,52 +129,33 @@
                         </div>
                     </div>
                     <p class="text-dark-green fw-medium mb-1">Does this look good?</p>
+                    <p class="text-muted small">You can always change your profile photo later in settings.</p>
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4 pt-0">
                     <div class="row g-2 w-100">
-                        <div class="col-6"><button type="button" class="btn btn-light w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">Cancel</button></div>
-                        <div class="col-6"><button type="button" class="btn btn-dark-green w-100 rounded-pill py-2 fw-bold text-white shadow-sm" id="confirm-photo-btn">Looks Great!</button></div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-light w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-dark-green w-100 rounded-pill py-2 fw-bold text-white shadow-sm" id="confirm-photo-btn">Looks Great!</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Success/Error Modals -->
+    <!-- Photo Success Modal -->
     <div class="modal fade" id="photoSuccessModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
                 <div class="modal-body p-5">
-                    <div class="icon-box bg-light-green text-success rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="bi bi-check-lg fs-1"></i></div>
+                    <div class="icon-box bg-light-green text-success rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-check-lg fs-1"></i>
+                    </div>
                     <h4 class="fw-bold text-dark-green heading-font mb-2">Updated!</h4>
                     <p class="text-muted mb-4">Your profile photo has been successfully changed.</p>
                     <button type="button" class="btn btn-dark-green rounded-pill px-5 fw-bold text-white shadow-sm" data-bs-dismiss="modal">Great</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="modal fade" id="settingsSuccessModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
-                <div class="modal-body p-5">
-                    <div class="icon-box bg-light-green text-success rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;"><i class="bi bi-check-lg fs-1"></i></div>
-                    <h4 class="fw-bold text-dark-green heading-font mb-2" id="settings-success-title">Updated!</h4>
-                    <p class="text-muted mb-4" id="settings-success-msg">Your changes have been saved successfully.</p>
-                    <button type="button" class="btn btn-dark-green rounded-pill px-5 fw-bold text-white shadow-sm" data-bs-dismiss="modal">Great</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="settingsErrorModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
-                <div class="modal-body p-5">
-                    <div class="icon-box bg-light-red text-danger rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: #fff5f5;"><i class="bi bi-exclamation-triangle fs-1"></i></div>
-                    <h4 class="fw-bold text-danger heading-font mb-2" id="settings-error-title">Oops!</h4>
-                    <p class="text-muted mb-4" id="settings-error-msg">Please check your inputs and try again.</p>
-                    <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold text-white shadow-sm" data-bs-dismiss="modal">I'll Fix It</button>
                 </div>
             </div>
         </div>
@@ -159,10 +180,53 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Generic Settings Success Modal -->
+    <div class="modal fade" id="settingsSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
+                <div class="modal-body p-5">
+                    <div class="icon-box bg-light-green text-success rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-check-lg fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark-green heading-font mb-2" id="settings-success-title">Updated!</h4>
+                    <p class="text-muted mb-4" id="settings-success-msg">Your changes have been saved successfully.</p>
+                    <button type="button" class="btn btn-dark-green rounded-pill px-5 fw-bold text-white shadow-sm" data-bs-dismiss="modal">Great</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Settings Error Modal -->
+    <div class="modal fade" id="settingsErrorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-center">
+                <div class="modal-body p-5">
+                    <div class="icon-box bg-light-red text-danger rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: #fff5f5;">
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
+                    </div>
+                    <h4 class="fw-bold text-danger heading-font mb-2" id="settings-error-title">Oops!</h4>
+                    <p class="text-muted mb-4" id="settings-error-msg">Please check your inputs and try again.</p>
+                    <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold text-white shadow-sm" data-bs-dismiss="modal">I'll Fix It</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark-green text-white py-5 py-lg-6 border-top border-white border-opacity-10 mt-5">
+        <div class="container pb-3">
+            <div class="row text-center border-top border-white border-opacity-10 pt-4">
+                <div class="col-12 opacity-50 small">
+                    &copy; 2026 Licensify. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/core/common.js"></script>
-    <script src="js/pages/admin/common.js"></script>
-    <script src="js/pages/settings.js"></script>
+    <script src="js/pages/trainer/settings.js"></script>
 </body>
+
 </html>
