@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <label>New Password</label>
                         <input type="password" id="forgot-new-pass" class="auth-input" placeholder="Create new password">
                         <div class="error-text">This Field is Required</div>
+                        <div class="form-text smaller text-muted mt-1" style="font-size: 0.75rem;">At least 8 characters with capital letters, numbers, and symbols.</div>
                     </div>
                     <div class="auth-input-group">
                         <label>Confirm Password</label>
@@ -244,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <label>Password</label>
                         <input type="password" id="signup-password" class="auth-input" placeholder="Create a strong password">
                         <div class="error-text">This Field is Required</div>
+                        <div class="form-text smaller text-muted mt-1" style="font-size: 0.75rem;">At least 8 characters with capital letters, numbers, and symbols.</div>
                     </div>
                     <div class="auth-input-group">
                         <label>Confirm Password</label>
@@ -419,6 +421,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function checkEmailFormat(email) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).toLowerCase());
+    }
+
+    function checkPasswordStrength(password) {
+        // Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character
+        const strongPassRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+        return strongPassRegex.test(password);
     }
 
     function clearAllErrors() {
@@ -609,10 +617,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', (e) => {
                     e.preventDefault();
-                    sessionStorage.removeItem('licensify_current_user');
-                    // Clear guest data on logout as requested
-                    localStorage.removeItem('licensify_guest_data');
-                    window.location.reload();
+                    // Destroy PHP session, then clear client state
+                    fetch('backend/auth/logout.php', { method: 'POST' })
+                    .finally(() => {
+                        sessionStorage.removeItem('licensify_current_user');
+                        localStorage.removeItem('licensify_guest_data');
+                        window.location.reload();
+                    });
                 });
             }
         }
@@ -657,7 +668,12 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         getUserData: function (key) {
             const user = this.getCurrentUser();
-            if (user && user.data && user.data[key]) return user.data[key];
+            if (user) {
+                // Check top-level user properties first (e.g. profile_photo from backend)
+                if (user[key] !== undefined && user[key] !== null) return user[key];
+                // Then check nested data object (backward compat for other features)
+                if (user.data && user.data[key]) return user.data[key];
+            }
             const guestData = JSON.parse(localStorage.getItem('licensify_guest_data')) || {};
             return guestData[key];
         },
@@ -694,9 +710,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebarLogoutBtn) {
         sidebarLogoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            sessionStorage.removeItem('licensify_current_user');
-            localStorage.removeItem('licensify_guest_data');
-            window.location.href = 'index.html';
+            // Destroy PHP session, then clear client state
+            fetch('backend/auth/logout.php', { method: 'POST' })
+            .finally(() => {
+                sessionStorage.removeItem('licensify_current_user');
+                localStorage.removeItem('licensify_guest_data');
+                window.location.href = 'index.html';
+            });
         });
     }
 
@@ -726,33 +746,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const email = emailEl.value.trim();
         const pass = passEl.value;
-        const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-        const user = users.find(u => u.email === email && u.password === pass);
 
-        if (user) {
-            // AUTHORIZATION: Specific admin user
-            if (user.email === 'rashadhindi2004@gmail.com') {
-                user.role = 'admin';
+        // Backend login via PHP
+        fetch('backend/auth/login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
+                updateNavbarForUser(user);
+
+                setTimeout(() => {
+                    if (user.role === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else if (user.role === 'trainer') {
+                        window.location.href = 'trainer-dashboard.html';
+                    } else {
+                        if (!handlePostAuthRedirect()) window.location.reload();
+                    }
+                }, 1000);
             } else {
-                user.role = user.role || 'student';
+                showAlert(data.message || 'Invalid email or password.');
             }
-
-            sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
-            showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
-            updateNavbarForUser(user);
-
-            setTimeout(() => {
-                if (user.role === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else if (user.role === 'trainer') {
-                    window.location.href = 'trainer-dashboard.html';
-                } else {
-                    if (!handlePostAuthRedirect()) window.location.reload();
-                }
-            }, 1000);
-        } else {
-            showAlert('Invalid email or password.');
-        }
+        })
+        .catch(err => {
+            console.error('Login error:', err);
+            showAlert('A connection error occurred. Please try again.');
+        });
     });
 
 
@@ -769,15 +794,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (isEmailValid) {
             const email = emailEl.value.trim();
-            const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
 
-            if (users.find(u => u.email === email)) {
-                showAlert('An account with this email already exists.', 'error');
-                return;
-            }
-
-            signupEmailPending = email;
-            switchView('signup2');
+            // Check email availability via PHP backend
+            fetch('backend/auth/check_email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists) {
+                    showAlert('An account with this email already exists.', 'error');
+                } else {
+                    signupEmailPending = email;
+                    switchView('signup2');
+                }
+            })
+            .catch(err => {
+                console.error('Email check error:', err);
+                showAlert('A connection error occurred. Please try again.');
+            });
         }
     });
 
@@ -795,7 +831,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const vFname = validateField(fnameEl, () => fnameEl.value.trim() !== '');
         const vLname = validateField(lnameEl, () => lnameEl.value.trim() !== '');
         const vPhone = validateField(phoneEl, () => phoneEl.value.trim() !== '');
-        const vPass = validateField(passEl, () => passEl.value !== '');
+        
+        let vPass = validateField(passEl, () => passEl.value !== '');
+        if (vPass) {
+            vPass = validateField(passEl, () => checkPasswordStrength(passEl.value), "Password must be at least 8 characters with capital letters, numbers, and symbols.");
+        }
+        
         const vConf = validateField(confEl, () => confEl.value !== '');
         const vTerms = validateField(termsEl, () => termsEl.checked);
 
@@ -829,29 +870,35 @@ document.addEventListener('DOMContentLoaded', function () {
             const phone = document.getElementById('signup-phone').value.trim();
             const pass = document.getElementById('signup-password').value;
 
-            const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-            // EVERY user who signs up is automatically a student
-            const newUser = { 
-                fname, 
-                lname, 
-                phone, 
-                email: signupEmailPending, 
-                password: pass,
-                role: 'student' 
-            };
-            users.push(newUser);
-            localStorage.setItem('licensify_users', JSON.stringify(users));
-            sessionStorage.setItem('licensify_current_user', JSON.stringify(newUser));
+            // Create account via PHP backend
+            fetch('backend/auth/signup.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fname, lname, email: signupEmailPending, phone, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
 
-            showAlert('Account Created Successfully!', 'success');
-            updateNavbarForUser(newUser);
-            if (timerInterval) clearInterval(timerInterval);
-            forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
+                    showAlert('Account Created Successfully!', 'success');
+                    updateNavbarForUser(user);
+                    if (timerInterval) clearInterval(timerInterval);
+                    forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
 
-            setTimeout(() => {
-                if (!handlePostAuthRedirect()) window.location.reload();
-                forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
-            }, 1500);
+                    setTimeout(() => {
+                        if (!handlePostAuthRedirect()) window.location.reload();
+                        forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
+                    }, 1500);
+                } else {
+                    showAlert(data.message || 'Signup failed. Please try again.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Signup error:', err);
+                showAlert('A connection error occurred. Please try again.');
+            });
         } else {
             showAlert('Invalid verification code.', 'error');
         }
@@ -898,7 +945,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const newPassEl = document.getElementById('forgot-new-pass');
         const confPassEl = document.getElementById('forgot-confirm-pass');
 
-        const vNew = validateField(newPassEl, () => newPassEl.value !== '');
+        let vNew = validateField(newPassEl, () => newPassEl.value !== '');
+        if (vNew) {
+            vNew = validateField(newPassEl, () => checkPasswordStrength(newPassEl.value), "Password must be at least 8 characters with capital letters, numbers, and symbols.");
+        }
         const vConf = validateField(confPassEl, () => confPassEl.value !== '');
 
         if (!vNew || !vConf) return;
@@ -908,18 +958,27 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-        const userIndex = users.findIndex(u => u.email === signupEmailPending);
-
-        if (userIndex !== -1) {
-            users[userIndex].password = newPassEl.value;
-            localStorage.setItem('licensify_users', JSON.stringify(users));
-        }
-
-        showAlert('Password reset successfully! Redirecting to login...', 'success');
-        setTimeout(() => {
-            switchView('login');
-        }, 1500);
+        // Reset password via PHP backend
+        fetch('backend/auth/reset_password.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: signupEmailPending, password: newPassEl.value })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Password reset successfully! Redirecting to login...', 'success');
+                setTimeout(() => {
+                    switchView('login');
+                }, 1500);
+            } else {
+                showAlert(data.message || 'Password reset failed. Please try again.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error('Reset error:', err);
+            showAlert('A connection error occurred. Please try again.');
+        });
     });
 
     // Resend Code Logic

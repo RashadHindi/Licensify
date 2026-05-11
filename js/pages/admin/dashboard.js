@@ -6,73 +6,72 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initDashboard() {
-    const stats = {
-        students: window.adminApp.getStudents().length,
-        trainers: window.adminApp.getTrainers().length,
-        reservations: window.adminApp.getReservations().length
-    };
+    fetch('backend/admin/get_dashboard_stats.php')
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Failed to load dashboard stats:', data.message);
+            return;
+        }
 
-    // Update Stats UI
-    document.getElementById('stat-students').innerText = stats.students;
-    document.getElementById('stat-trainers').innerText = stats.trainers;
-    document.getElementById('stat-reservations').innerText = stats.reservations;
+        // Update Stats UI
+        document.getElementById('stat-students').innerText = data.stats.students;
+        document.getElementById('stat-trainers').innerText = data.stats.trainers;
+        document.getElementById('stat-reservations').innerText = data.stats.reservations;
 
-    renderRecentReservations();
-    renderTrainerDistribution();
+        renderRecentReservations(data.recent_reservations);
+        renderTrainerDistribution(data.trainer_distribution, data.stats.reservations);
+    })
+    .catch(err => console.error('Error fetching admin dashboard:', err));
 }
 
-function renderRecentReservations() {
+function renderRecentReservations(reservations) {
     const tableBody = document.getElementById('recent-reservations-table');
     if (!tableBody) return;
 
-    const reservations = window.adminApp.getReservations().slice(-5).reverse();
-    
-    if (reservations.length === 0) {
+    if (!reservations || reservations.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No recent reservations found.</td></tr>';
         return;
     }
 
-    tableBody.innerHTML = reservations.map(res => `
+    tableBody.innerHTML = reservations.map(res => {
+        let statusBadgeClass = 'bg-light-green text-dark-green'; // Default/Upcoming
+        if (res.status === 'Completed') statusBadgeClass = 'bg-primary-subtle text-primary-emphasis fw-semibold';
+        else if (res.status === 'Cancelled') statusBadgeClass = 'bg-danger-subtle text-danger-emphasis fw-semibold';
+
+        return `
         <tr>
             <td class="px-4 py-3">
                 <div class="fw-bold text-dark-green smaller">${res.studentName || 'Student'}</div>
             </td>
             <td class="px-4 py-3 smaller text-muted">${res.trainerName || 'Trainer'}</td>
             <td class="px-4 py-3">
-                <span class="badge bg-light-green text-dark-green smaller">
+                <span class="badge ${statusBadgeClass} smaller">
                     ${res.status || 'Reserved'}
                 </span>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
-function renderTrainerDistribution() {
-    const reservations = window.adminApp.getReservations();
-    const trainerCounts = {};
-    
-    reservations.forEach(r => {
-        trainerCounts[r.trainerName] = (trainerCounts[r.trainerName] || 0) + 1;
-    });
-
-    const total = reservations.length || 1;
-    const sortedTrainers = Object.entries(trainerCounts).sort((a, b) => b[1] - a[1]);
-    
+function renderTrainerDistribution(trainerDistribution, totalReservations) {
     const container = document.getElementById('trainer-distribution-list');
     if (!container) return;
 
-    if (sortedTrainers.length === 0) {
+    if (!trainerDistribution || trainerDistribution.length === 0) {
         container.innerHTML = '<p class="text-center text-muted smaller py-3">No booking data available yet.</p>';
         return;
     }
 
-    container.innerHTML = sortedTrainers.map(([name, count]) => {
-        const percent = Math.round((count / total) * 100);
+    const total = totalReservations || 1;
+
+    container.innerHTML = trainerDistribution.map(trainer => {
+        const percent = Math.round((trainer.count / total) * 100);
         return `
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold text-dark-green smaller">${name}</span>
-                    <span class="text-muted smaller">${percent}% (${count} lessons)</span>
+                    <span class="fw-bold text-dark-green smaller">${trainer.name}</span>
+                    <span class="text-muted smaller">${percent}% (${trainer.completed_count} completed, ${trainer.upcoming_count} upcoming)</span>
                 </div>
                 <div class="progress" style="height: 8px;">
                     <div class="progress-bar bg-dark-green" role="progressbar" style="width: ${percent}%"></div>

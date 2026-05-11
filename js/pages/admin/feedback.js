@@ -2,14 +2,31 @@
  * Feedback & Reports Logic
  */
 let ratingChart = null;
+let loadedFeedback = [];
+let loadedTrainers = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    initFeedbackPage();
-    populateTrainerFilter();
+    fetchFeedbackData();
 });
 
+function fetchFeedbackData() {
+    fetch('backend/admin/get_feedback.php')
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            loadedFeedback = data.feedback;
+            loadedTrainers = data.trainers;
+            initFeedbackPage();
+            populateTrainerFilter();
+        } else {
+            console.error('Failed to load feedback', data.message);
+        }
+    })
+    .catch(err => console.error('Error fetching feedback:', err));
+}
+
 function initFeedbackPage() {
-    const feedback = window.adminApp.getFeedback();
+    const feedback = loadedFeedback;
     
     // 1. Calculate Stats
     const totalReviews = feedback.length;
@@ -105,11 +122,13 @@ function renderFeedbackTable(feedbacks) {
         return;
     }
 
-    tableBody.innerHTML = feedbacks.map(f => `
+    tableBody.innerHTML = feedbacks.map(f => {
+        const dateStr = window.adminApp && window.adminApp.formatDate ? window.adminApp.formatDate(f.date) : f.date;
+        return `
         <tr>
             <td class="px-4 py-3">
                 <div class="fw-bold text-dark-green smaller">${f.studentName}</div>
-                <div class="text-muted smaller" style="font-size: 0.7rem;">${window.adminApp.formatDate(f.date)}</div>
+                <div class="text-muted smaller" style="font-size: 0.7rem;">${dateStr}</div>
             </td>
             <td class="px-4 py-3 smaller">${f.trainerName}</td>
             <td class="px-4 py-3">
@@ -121,16 +140,16 @@ function renderFeedbackTable(feedbacks) {
                 <p class="mb-0 text-muted smaller" style="max-width: 400px; line-height: 1.4;">${f.comment}</p>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function populateTrainerFilter() {
     const filter = document.getElementById('trainer-feedback-filter');
     if (!filter) return;
 
-    const trainers = window.adminApp.getTrainers();
+    filter.innerHTML = '<option value="all">All Trainers</option>';
     
-    trainers.forEach(t => {
+    loadedTrainers.forEach(t => {
         const opt = document.createElement('option');
         const name = `${t.fname} ${t.lname}`;
         opt.value = name;
@@ -140,7 +159,7 @@ function populateTrainerFilter() {
 
     filter.addEventListener('change', (e) => {
         const selectedTrainer = e.target.value;
-        const allFeedback = window.adminApp.getFeedback();
+        const allFeedback = loadedFeedback;
         const filteredFeedback = selectedTrainer === 'all' 
             ? allFeedback 
             : allFeedback.filter(f => f.trainerName === selectedTrainer);

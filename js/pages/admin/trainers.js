@@ -1,24 +1,38 @@
 /**
  * Trainer Management Logic
  */
+let loadedTrainers = [];
+
 document.addEventListener('DOMContentLoaded', function() {
-    renderTrainersTable();
+    fetchTrainers();
     injectDeleteModal();
     injectScheduleModal();
 });
+
+function fetchTrainers() {
+    fetch('backend/admin/get_users.php?role=trainer')
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            loadedTrainers = data.users;
+            renderTrainersTable();
+        } else {
+            console.error('Failed to load trainers', data.message);
+        }
+    })
+    .catch(err => console.error('Error fetching trainers:', err));
+}
 
 function renderTrainersTable() {
     const tableBody = document.getElementById('trainers-table-body');
     if (!tableBody) return;
 
-    const trainers = window.adminApp.getTrainers();
-
-    if (trainers.length === 0) {
+    if (loadedTrainers.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">No trainers found.</td></tr>';
         return;
     }
 
-    tableBody.innerHTML = trainers.map(trainer => `
+    tableBody.innerHTML = loadedTrainers.map(trainer => `
         <tr>
             <td class="px-4 py-3">
                 <div class="d-flex align-items-center gap-3">
@@ -28,8 +42,8 @@ function renderTrainersTable() {
             </td>
             <td class="px-4 py-3 smaller text-muted">${trainer.email}</td>
             <td class="px-4 py-3">
-                <div class="text-warning smaller">
-                    <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                <div class="text-warning smaller fw-bold">
+                    <i class="bi bi-star-fill text-warning me-1"></i> ${trainer.rating ? parseFloat(trainer.rating).toFixed(1) : '0.0'}
                 </div>
             </td>
             <td class="px-4 py-3">
@@ -50,6 +64,7 @@ let deleteEmail = null;
 let scheduleEmail = null;
 
 function injectDeleteModal() {
+    // ... HTML injection ...
     const modalHTML = `
     <div class="modal fade" id="deleteTrainerModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -159,8 +174,7 @@ function injectScheduleModal() {
 }
 
 function deleteTrainer(email) {
-    const users = window.adminApp.getUsers();
-    const user = users.find(u => u.email === email);
+    const user = loadedTrainers.find(u => u.email === email);
     if (!user) return;
 
     deleteEmail = email;
@@ -171,55 +185,82 @@ function deleteTrainer(email) {
 }
 
 function performTrainerDeletion() {
-    let users = window.adminApp.getUsers();
-    users = users.filter(u => u.email !== deleteEmail);
-    window.adminApp.saveUsers(users);
-    renderTrainersTable();
-    
-    document.getElementById('delete-trainer-step-confirm').classList.add('d-none');
-    document.getElementById('delete-trainer-step-success').classList.remove('d-none');
-    document.getElementById('delete-trainer-btn-cancel').classList.add('d-none');
-    
     const actionBtn = document.getElementById('delete-trainer-btn-action');
-    actionBtn.innerText = 'Done';
-    actionBtn.classList.remove('btn-danger');
-    actionBtn.classList.add('btn-dark-green');
+    const originalText = actionBtn.innerText;
+    actionBtn.innerText = 'Deleting...';
+    actionBtn.disabled = true;
+
+    fetch('backend/admin/delete_user.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: deleteEmail })
+    })
+    .then(res => res.json())
+    .then(data => {
+        actionBtn.disabled = false;
+        if (data.success) {
+            loadedTrainers = loadedTrainers.filter(u => u.email !== deleteEmail);
+            renderTrainersTable();
+            
+            document.getElementById('delete-trainer-step-confirm').classList.add('d-none');
+            document.getElementById('delete-trainer-step-success').classList.remove('d-none');
+            document.getElementById('delete-trainer-btn-cancel').classList.add('d-none');
+            
+            actionBtn.innerText = 'Done';
+            actionBtn.classList.remove('btn-danger');
+            actionBtn.classList.add('btn-dark-green');
+        } else {
+            actionBtn.innerText = originalText;
+            alert(data.message || 'Failed to delete trainer.');
+        }
+    })
+    .catch(err => {
+        console.error('Error deleting trainer:', err);
+        actionBtn.disabled = false;
+        actionBtn.innerText = originalText;
+        alert('A network error occurred.');
+    });
 }
 
 function viewSchedule(email) {
-    const users = window.adminApp.getUsers();
-    const trainer = users.find(u => u.email === email);
+    const trainer = loadedTrainers.find(u => u.email === email);
     if (!trainer) return;
 
     document.getElementById('schedule-trainer-name').innerText = `${trainer.fname} ${trainer.lname}`;
     
-    const reservations = window.adminApp.getReservations();
-    const trainerRes = reservations.filter(r => r.trainerName.includes(trainer.fname));
-    
     const content = document.getElementById('schedule-content');
     const empty = document.getElementById('schedule-empty');
-    
-    if (trainerRes.length === 0) {
-        content.innerHTML = '';
-        empty.classList.remove('d-none');
-    } else {
-        empty.classList.add('d-none');
-        content.innerHTML = trainerRes.map(res => `
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 ${res.status === 'Completed' ? 'border-success' : 'border-orange'}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge ${res.status === 'Completed' ? 'bg-success-subtle text-success' : 'bg-orange-subtle text-orange'} rounded-pill px-3">${res.status}</span>
-                        <div class="text-muted smaller"><i class="bi bi-clock me-1"></i>${res.time}</div>
-                    </div>
-                    <h6 class="fw-bold text-dark-green mb-1">${res.studentName}</h6>
-                    <div class="smaller text-muted"><i class="bi bi-calendar-event me-1"></i>${res.date}</div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
+    content.innerHTML = '<div class="text-center w-100"><div class="spinner-border text-dark-green" role="status"></div></div>';
+    empty.classList.add('d-none');
+
     const modal = new bootstrap.Modal(document.getElementById('scheduleModal'));
     modal.show();
+
+    fetch(`backend/admin/get_trainer_schedule.php?email=${encodeURIComponent(email)}`)
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            const trainerRes = data.reservations;
+            if (trainerRes.length === 0) {
+                content.innerHTML = '';
+                empty.classList.remove('d-none');
+            } else {
+                empty.classList.add('d-none');
+                content.innerHTML = trainerRes.map(res => `
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 ${res.status === 'Completed' ? 'border-primary' : 'border-success'}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge ${res.status === 'Completed' ? 'bg-primary-subtle text-primary-emphasis' : 'bg-success-subtle text-success-emphasis'} rounded-pill px-3">${res.status}</span>
+                                <div class="text-muted smaller"><i class="bi bi-clock me-1"></i>${res.time}</div>
+                            </div>
+                            <h6 class="fw-bold text-dark-green mb-1">${res.studentName}</h6>
+                            <div class="smaller text-muted"><i class="bi bi-calendar-event me-1"></i>${res.date}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    });
 }
 
 // Global exposure

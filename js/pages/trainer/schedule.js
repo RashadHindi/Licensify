@@ -1,5 +1,6 @@
 /**
  * Trainer Schedule Logic - Enhanced with Hourly Agenda & Availability
+ * Connected to PHP backend for persistent storage.
  */
 document.addEventListener('DOMContentLoaded', function() {
     const user = window.authApp.getCurrentUser();
@@ -20,15 +21,24 @@ function initSchedule(user) {
         agendaDatePicker.value = today;
 
         const updateAgenda = () => {
-            const reservations = JSON.parse(localStorage.getItem('licensify_reservations')) || [];
-            const myReservations = reservations.filter(r => r.trainerName === trainerName);
-            const availability = JSON.parse(localStorage.getItem('licensify_trainer_availability')) || {};
-            const myAvailability = availability[trainerName] || {};
-
             const selectedDate = agendaDatePicker.value;
-            const dayLessons = myReservations.filter(r => r.date === selectedDate && r.status !== 'Cancelled');
 
-            renderHourlyAgenda(selectedDate, dayLessons, myAvailability);
+            // Fetch both availability and reservations from backend
+            Promise.all([
+                fetch(`backend/schedule/get_availability.php?date=${selectedDate}`).then(r => r.json()),
+                fetch(`backend/schedule/get_trainer_reservations.php?date=${selectedDate}`).then(r => r.json())
+            ])
+            .then(([availData, resData]) => {
+                const isDayOff = availData.success ? availData.is_day_off : false;
+                const unavailableSlots = availData.success ? availData.unavailable_slots : [];
+                const dayLessons = resData.success ? resData.reservations : [];
+
+                renderHourlyAgenda(selectedDate, dayLessons, isDayOff, unavailableSlots);
+            })
+            .catch(err => {
+                console.error('Schedule load error:', err);
+                renderHourlyAgenda(selectedDate, [], false, []);
+            });
         };
 
         agendaDatePicker.addEventListener('change', updateAgenda);
@@ -38,22 +48,35 @@ function initSchedule(user) {
         if (dayOffBtn) {
             dayOffBtn.addEventListener('click', () => {
                 const selectedDate = agendaDatePicker.value;
-                const availability = JSON.parse(localStorage.getItem('licensify_trainer_availability')) || {};
-                if (!availability[trainerName]) availability[trainerName] = {};
-                
-                const current = availability[trainerName][selectedDate];
-                if (current === 'FULL_DAY_OFF') {
-                    delete availability[trainerName][selectedDate];
-                    localStorage.setItem('licensify_trainer_availability', JSON.stringify(availability));
-                    updateAgenda();
+                const isCurrentlyDayOff = dayOffBtn.dataset.isDayOff === 'true';
+
+                if (isCurrentlyDayOff) {
+                    // Remove day off via backend
+                    fetch('backend/schedule/set_day_off.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date: selectedDate, day_off: false })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) updateAgenda();
+                    })
+                    .catch(err => console.error('Day off toggle error:', err));
                 } else {
                     showConfirmModal(
                         "Set Day Off", 
                         `Mark ${selectedDate} as a full day off?`,
                         () => {
-                            availability[trainerName][selectedDate] = 'FULL_DAY_OFF';
-                            localStorage.setItem('licensify_trainer_availability', JSON.stringify(availability));
-                            updateAgenda();
+                            fetch('backend/schedule/set_day_off.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ date: selectedDate, day_off: true })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) updateAgenda();
+                            })
+                            .catch(err => console.error('Day off toggle error:', err));
                         }
                     );
                 }
@@ -83,14 +106,14 @@ function showConfirmModal(title, message, onConfirm) {
     modal.show();
 }
 
-function renderHourlyAgenda(date, lessons, myAvailability) {
+function renderHourlyAgenda(date, lessons, isDayOff, unavailableSlots) {
     const tableBody = document.getElementById('hourly-agenda-table');
     if (!tableBody) return;
 
     const dayOffBtn = document.getElementById('mark-day-off-btn');
-    const isDayOff = myAvailability[date] === 'FULL_DAY_OFF';
     
     if (dayOffBtn) {
+        dayOffBtn.dataset.isDayOff = isDayOff ? 'true' : 'false';
         dayOffBtn.innerText = isDayOff ? "Remove Day Off" : "Set Day Off";
         dayOffBtn.className = isDayOff ? "btn btn-sm btn-danger rounded-pill px-3 fw-bold" : "btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold";
     }
@@ -105,16 +128,29 @@ function renderHourlyAgenda(date, lessons, myAvailability) {
         return;
     }
 
-    const unavailableHours = Array.isArray(myAvailability[date]) ? myAvailability[date] : [];
-
     tableBody.innerHTML = hours.map(h => {
         const lesson = lessons.find(l => l.time === h);
-        const isUnavailable = unavailableHours.includes(h);
+        const isUnavailable = unavailableSlots.includes(h);
 
         let statusHtml = '';
         let actionHtml = '';
+        let rowClass = '';
 
-        if (lesson) {
+        if (lesson && lesson.status === 'Completed') {
+            rowClass = 'bg-light';
+            statusHtml = `
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-1 smaller fw-bold"><i class="bi bi-check-circle me-1"></i>COMPLETED</div>
+                    <div class="fw-medium text-muted">${lesson.studentName}</div>
+                </div>
+            `;
+            actionHtml = `
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold" onclick="updateLessonStatus(${lesson.id}, 'Upcoming')" title="Undo completion">
+                    <i class="bi bi-arrow-counterclockwise"></i> Undo
+                </button>
+            `;
+        } else if (lesson) {
+            rowClass = 'bg-light-green bg-opacity-10';
             statusHtml = `
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 smaller fw-bold">RESERVED</div>
@@ -126,6 +162,7 @@ function renderHourlyAgenda(date, lessons, myAvailability) {
                 <button class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="updateLessonStatus(${lesson.id}, 'Cancelled')">Cancel</button>
             `;
         } else if (isUnavailable) {
+            rowClass = 'bg-light';
             statusHtml = `<div class="text-danger fw-bold smaller"><i class="bi bi-slash-circle me-1"></i> UNAVAILABLE</div>`;
             actionHtml = `<button class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" onclick="toggleHourAvailability('${h}', false)">Make Available</button>`;
         } else {
@@ -134,8 +171,8 @@ function renderHourlyAgenda(date, lessons, myAvailability) {
         }
 
         return `
-            <tr class="${lesson ? 'bg-light-green bg-opacity-10' : ''} ${isUnavailable ? 'bg-light' : ''}">
-                <td class="px-4 py-3"><span class="fw-bold text-dark-green smaller">${h}</span></td>
+            <tr class="${rowClass}">
+                <td class="px-4 py-3"><span class="fw-bold ${lesson && lesson.status === 'Completed' ? 'text-muted' : 'text-dark-green'} smaller">${h}</span></td>
                 <td class="px-4 py-3">${statusHtml}</td>
                 <td class="px-4 py-3 text-end">${actionHtml}</td>
             </tr>
@@ -143,25 +180,25 @@ function renderHourlyAgenda(date, lessons, myAvailability) {
     }).join('');
 }
 
+
 function toggleHourAvailability(hour, setUnavailable) {
-    const user = window.authApp.getCurrentUser();
-    const trainerName = `${user.fname} ${user.lname}`;
     const date = document.getElementById('agenda-date-picker').value;
     
-    const availability = JSON.parse(localStorage.getItem('licensify_trainer_availability')) || {};
-    if (!availability[trainerName]) availability[trainerName] = {};
-    if (!availability[trainerName][date]) availability[trainerName][date] = [];
-    
-    if (setUnavailable) {
-        if (!availability[trainerName][date].includes(hour)) {
-            availability[trainerName][date].push(hour);
+    fetch('backend/schedule/set_slot.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, slot_hour: hour, unavailable: setUnavailable })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Re-trigger the agenda update without a full page reload
+            document.getElementById('agenda-date-picker').dispatchEvent(new Event('change'));
+        } else {
+            console.error('Slot toggle failed:', data.message);
         }
-    } else {
-        availability[trainerName][date] = availability[trainerName][date].filter(h => h !== hour);
-    }
-    
-    localStorage.setItem('licensify_trainer_availability', JSON.stringify(availability));
-    location.reload();
+    })
+    .catch(err => console.error('Slot toggle error:', err));
 }
 
 function updateLessonStatus(id, newStatus) {
@@ -169,13 +206,20 @@ function updateLessonStatus(id, newStatus) {
         "Update Status",
         `Mark this lesson as ${newStatus}?`,
         () => {
-            const reservations = JSON.parse(localStorage.getItem('licensify_reservations')) || [];
-            const index = reservations.findIndex(r => r.id === id);
-            if (index !== -1) {
-                reservations[index].status = newStatus;
-                localStorage.setItem('licensify_reservations', JSON.stringify(reservations));
-                location.reload();
-            }
+            fetch('backend/schedule/update_reservation.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reservation_id: id, status: newStatus })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('agenda-date-picker').dispatchEvent(new Event('change'));
+                } else {
+                    console.error('Status update failed:', data.message);
+                }
+            })
+            .catch(err => console.error('Status update error:', err));
         }
     );
 }
