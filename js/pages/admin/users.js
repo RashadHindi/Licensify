@@ -6,19 +6,34 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 let selectedUserId = null;
+let loadedUsers = [];
 
 function initUserManagement() {
-    renderUsersTable();
+    fetchUsers();
     initSearch();
     injectCustomModal();
     injectDeleteModal();
+}
+
+function fetchUsers() {
+    fetch('backend/admin/get_users.php?role=student')
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            loadedUsers = data.users;
+            renderUsersTable();
+        } else {
+            console.error('Failed to load students', data.message);
+        }
+    })
+    .catch(err => console.error('Error fetching students:', err));
 }
 
 function renderUsersTable(searchTerm = '') {
     const tableBody = document.getElementById('users-table-body');
     if (!tableBody) return;
 
-    let users = window.adminApp.getStudents(); // Filter to only students as requested
+    let users = loadedUsers;
     
     // Filter out searching
     if (searchTerm) {
@@ -159,8 +174,7 @@ function injectCustomModal() {
 }
 
 function promoteToTrainer(email) {
-    const users = window.adminApp.getUsers();
-    const user = users.find(u => u.email === email);
+    const user = loadedUsers.find(u => u.email === email);
     
     if (!user) return;
 
@@ -173,29 +187,45 @@ function promoteToTrainer(email) {
 }
 
 function performPromotion() {
-    const users = window.adminApp.getUsers();
-    const userIndex = users.findIndex(u => u.email === promotionEmail);
-    
-    if (userIndex !== -1) {
-        // Update role
-        users[userIndex].role = 'trainer';
-        
-        // Save to "database" (localStorage)
-        window.adminApp.saveUsers(users);
-        
-        // Refresh table
-        renderUsersTable();
-        
-        // Show Success Step
-        document.getElementById('promote-step-2').classList.add('d-none');
-        document.getElementById('promote-step-success').classList.remove('d-none');
-        document.getElementById('promote-btn-cancel').classList.add('d-none');
-        
-        const actionBtn = document.getElementById('promote-btn-action');
-        actionBtn.innerText = 'Got it!';
-        actionBtn.classList.remove('btn-orange');
-        actionBtn.classList.add('btn-dark-green');
-    }
+    const actionBtn = document.getElementById('promote-btn-action');
+    const originalText = actionBtn.innerText;
+    actionBtn.innerText = 'Updating...';
+    actionBtn.disabled = true;
+
+    fetch('backend/admin/update_user_role.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: promotionEmail, role: 'trainer' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        actionBtn.disabled = false;
+        if (data.success) {
+            const userIndex = loadedUsers.findIndex(u => u.email === promotionEmail);
+            if (userIndex !== -1) {
+                loadedUsers.splice(userIndex, 1);
+                renderUsersTable();
+            }
+            
+            // Show Success Step
+            document.getElementById('promote-step-2').classList.add('d-none');
+            document.getElementById('promote-step-success').classList.remove('d-none');
+            document.getElementById('promote-btn-cancel').classList.add('d-none');
+            
+            actionBtn.innerText = 'Got it!';
+            actionBtn.classList.remove('btn-orange');
+            actionBtn.classList.add('btn-dark-green');
+        } else {
+            actionBtn.innerText = originalText;
+            alert(data.message || 'Failed to update role.');
+        }
+    })
+    .catch(err => {
+        console.error('Error promoting user:', err);
+        actionBtn.disabled = false;
+        actionBtn.innerText = originalText;
+        alert('A network error occurred.');
+    });
 }
 
 let deleteEmail = null;
@@ -271,8 +301,7 @@ function injectDeleteModal() {
 }
 
 function deleteUser(email) {
-    const users = window.adminApp.getUsers();
-    const user = users.find(u => u.email === email);
+    const user = loadedUsers.find(u => u.email === email);
     
     if (!user) return;
 
@@ -284,24 +313,42 @@ function deleteUser(email) {
 }
 
 function performDeletion() {
-    let users = window.adminApp.getUsers();
-    users = users.filter(u => u.email !== deleteEmail);
-    
-    // Save to "database"
-    window.adminApp.saveUsers(users);
-    
-    // Refresh table
-    renderUsersTable();
-    
-    // Show Success Step
-    document.getElementById('delete-step-confirm').classList.add('d-none');
-    document.getElementById('delete-step-success').classList.remove('d-none');
-    document.getElementById('delete-btn-cancel').classList.add('d-none');
-    
     const actionBtn = document.getElementById('delete-btn-action');
-    actionBtn.innerText = 'Done';
-    actionBtn.classList.remove('btn-danger');
-    actionBtn.classList.add('btn-dark-green');
+    const originalText = actionBtn.innerText;
+    actionBtn.innerText = 'Deleting...';
+    actionBtn.disabled = true;
+
+    fetch('backend/admin/delete_user.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: deleteEmail })
+    })
+    .then(res => res.json())
+    .then(data => {
+        actionBtn.disabled = false;
+        if (data.success) {
+            loadedUsers = loadedUsers.filter(u => u.email !== deleteEmail);
+            renderUsersTable();
+            
+            // Show Success Step
+            document.getElementById('delete-step-confirm').classList.add('d-none');
+            document.getElementById('delete-step-success').classList.remove('d-none');
+            document.getElementById('delete-btn-cancel').classList.add('d-none');
+            
+            actionBtn.innerText = 'Done';
+            actionBtn.classList.remove('btn-danger');
+            actionBtn.classList.add('btn-dark-green');
+        } else {
+            actionBtn.innerText = originalText;
+            alert(data.message || 'Failed to delete user.');
+        }
+    })
+    .catch(err => {
+        console.error('Error deleting user:', err);
+        actionBtn.disabled = false;
+        actionBtn.innerText = originalText;
+        alert('A network error occurred.');
+    });
 }
 
 // Global exposure for onclick handlers

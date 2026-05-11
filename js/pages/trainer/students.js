@@ -12,61 +12,63 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initStudents(user) {
-    const trainerName = `${user.fname} ${user.lname}`;
     const searchInput = document.getElementById('student-search');
 
-    const update = () => {
-        renderStudents(trainerName, searchInput.value);
-    };
+    fetch('backend/schedule/get_trainer_students.php')
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Failed to load students');
+            return;
+        }
 
-    searchInput.addEventListener('input', update);
-    update();
+        const allStudents = data.students || [];
+
+        const update = () => {
+            renderStudents(allStudents, searchInput.value);
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', update);
+        }
+        update();
+    })
+    .catch(err => console.error('Error fetching students:', err));
 }
 
-function renderStudents(trainerName, query) {
+function renderStudents(students, query) {
     const tableBody = document.getElementById('trainer-students-table');
     if (!tableBody) return;
 
-    const reservations = JSON.parse(localStorage.getItem('licensify_reservations')) || [];
-    const feedbacks = JSON.parse(localStorage.getItem('licensify_trainer_feedback')) || [];
-    
-    // Filter trainer's reservations
-    const myReservations = reservations.filter(r => r.trainerName === trainerName);
-    
-    // Get unique student names
-    let studentNames = [...new Set(myReservations.map(r => r.studentName))];
+    let filteredStudents = students;
     
     if (query) {
-        studentNames = studentNames.filter(name => name.toLowerCase().includes(query.toLowerCase()));
+        filteredStudents = filteredStudents.filter(s => s.studentName.toLowerCase().includes(query.toLowerCase()));
     }
 
-    if (studentNames.length === 0) {
+    if (filteredStudents.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">No students found.</td></tr>';
         return;
     }
 
-    tableBody.innerHTML = studentNames.map(name => {
-        const studentLessons = myReservations.filter(r => r.studentName === name);
-        const lastFeedback = feedbacks.filter(f => f.studentName === name && f.trainerName === trainerName)
-                                     .sort((a, b) => b.timestamp - a.timestamp)[0];
-
+    tableBody.innerHTML = filteredStudents.map(student => {
         return `
             <tr>
                 <td class="px-4 py-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-light-green text-dark-green rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-weight: bold;">
-                            ${name.charAt(0)}
+                            ${student.studentName.charAt(0)}
                         </div>
-                        <div class="fw-bold text-dark-green smaller">${name}</div>
+                        <div class="fw-bold text-dark-green smaller">${student.studentName}</div>
                     </div>
                 </td>
                 <td class="px-4 py-4 smaller text-muted">
-                    ${studentLessons.length} Lessons
+                    ${student.totalLessons} Lessons
                 </td>
                 <td class="px-4 py-4">
-                    ${lastFeedback ? `
-                        <div class="smaller text-dark-green fw-medium text-truncate" style="max-width: 250px;">"${lastFeedback.message}"</div>
-                        <div class="text-muted" style="font-size: 0.7rem;">${lastFeedback.date}</div>
+                    ${student.lastFeedback ? `
+                        <div class="smaller text-dark-green fw-medium text-truncate" style="max-width: 250px;">"${student.lastFeedback}"</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">${student.lastFeedbackDate}</div>
                     ` : '<span class="text-muted smaller italic">No feedback sent yet</span>'}
                 </td>
                 <td class="px-4 py-4 text-end">
