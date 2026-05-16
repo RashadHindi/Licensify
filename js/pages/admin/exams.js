@@ -1,139 +1,109 @@
 /**
- * Exam Management Logic
+ * Admin Exams Analytics Logic
  */
-document.addEventListener('DOMContentLoaded', function() {
-    renderExams();
-    initExamForm();
-});
+document.addEventListener('DOMContentLoaded', function () {
+    const examsTableBody = document.getElementById('exams-table-body');
+    const chartCanvas = document.getElementById('examCreatorChart');
+    let examChart = null;
 
-function renderExams() {
-    const grid = document.getElementById('exams-grid');
-    if (!grid) return;
+    loadExamsStats();
 
-    const exams = window.adminApp.getExams();
-
-    if (exams.length === 0) {
-        grid.innerHTML = `
-            <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
-                    <i class="bi bi-journal-x text-muted display-1 mb-3"></i>
-                    <h5 class="fw-bold text-dark-green">No Exams Found</h5>
-                    <p class="text-muted">Start by creating your first mock exam.</p>
-                </div>
-            </div>
-        `;
-        return;
-    }
-
-    grid.innerHTML = exams.map(exam => `
-        <div class="col-md-6 col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                <div class="p-4 border-bottom bg-light-green">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge bg-white text-dark-green rounded-pill px-3 py-1 fw-bold smaller">
-                            ${exam.questionCount || 0} Questions
-                        </span>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light rounded-circle p-0" style="width: 30px; height: 30px;" data-bs-toggle="dropdown">
-                                <i class="bi bi-three-dots-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4">
-                                <li><a class="dropdown-item py-2" href="#" onclick="editExam(${exam.id})"><i class="bi bi-pencil me-2"></i> Edit Details</a></li>
-                                <li><a class="dropdown-item py-2" href="questions.html?examId=${exam.id}"><i class="bi bi-list-task me-2"></i> Manage Questions</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="#" onclick="deleteExam(${exam.id})"><i class="bi bi-trash me-2"></i> Delete</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <h5 class="fw-bold text-dark-green mb-1 heading-font">${exam.title}</h5>
-                    <div class="d-flex gap-3 mt-3">
-                        <div class="smaller text-muted"><i class="bi bi-clock me-1"></i> ${exam.duration} mins</div>
-                        <div class="smaller text-muted"><i class="bi bi-bar-chart me-1"></i> ${exam.attempts || 0} Attempts</div>
-                    </div>
-                </div>
-                <div class="p-4 d-flex justify-content-between align-items-center bg-white">
-                    <a href="questions.html?examId=${exam.id}" class="btn btn-sm btn-outline-dark-green rounded-pill px-3 fw-bold">Manage Questions</a>
-                    <div class="text-dark-green fw-bold small">Active</div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function initExamForm() {
-    const form = document.getElementById('exam-form');
-    const createBtn = document.getElementById('create-exam-btn');
-    const modal = new bootstrap.Modal(document.getElementById('examModal'));
-
-    if (createBtn) {
-        createBtn.addEventListener('click', () => {
-            document.getElementById('examModalTitle').innerText = 'Create New Mock Exam';
-            document.getElementById('exam-id').value = '';
-            form.reset();
-            modal.show();
-        });
-    }
-
-    if (form) {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('exam-id').value;
-            const title = document.getElementById('exam-title').value;
-            const duration = document.getElementById('exam-duration').value;
-            const limit = document.getElementById('exam-limit').value;
-
-            let exams = window.adminApp.getExams();
-
-            if (id) {
-                // Edit
-                const idx = exams.findIndex(ex => ex.id == id);
-                if (idx !== -1) {
-                    exams[idx].title = title;
-                    exams[idx].duration = duration;
-                    exams[idx].questionCount = limit;
+    function loadExamsStats() {
+        fetch('backend/admin/get_exams_stats.php')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderExamsTable(data.exams);
+                    renderChart(data.distribution);
+                } else {
+                    console.error('Failed to load exam stats:', data.message);
                 }
-            } else {
-                // Create
-                const newExam = {
-                    id: Date.now(),
-                    title: title,
-                    duration: duration,
-                    questionCount: limit,
-                    attempts: 0
-                };
-                exams.push(newExam);
-            }
+            })
+            .catch(err => console.error('Error fetching exam stats:', err));
+    }
 
-            window.adminApp.saveExams(exams);
-            renderExams();
-            modal.hide();
+    function renderExamsTable(exams) {
+        if (!examsTableBody) return;
+        examsTableBody.innerHTML = '';
+
+        if (exams.length === 0) {
+            examsTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No exams found in database.</td></tr>';
+            return;
+        }
+
+        exams.forEach(exam => {
+            const row = `
+                <tr>
+                    <td class="px-4 py-3 align-middle fw-semibold text-dark-green">${exam.title}</td>
+                    <td class="px-4 py-3 align-middle">
+                        <span class="badge bg-light-green text-dark-green px-3 py-2 rounded-pill fw-medium">${exam.category}</span>
+                    </td>
+                    <td class="px-4 py-3 align-middle text-muted">${exam.creator_name}</td>
+                    <td class="px-4 py-3 align-middle smaller text-muted">${exam.created_at}</td>
+                </tr>
+            `;
+            examsTableBody.innerHTML += row;
         });
     }
-}
 
-function editExam(id) {
-    const exams = window.adminApp.getExams();
-    const exam = exams.find(ex => ex.id == id);
-    if (!exam) return;
+    function renderChart(distribution) {
+        if (!chartCanvas) return;
 
-    document.getElementById('examModalTitle').innerText = 'Edit Mock Exam';
-    document.getElementById('exam-id').value = exam.id;
-    document.getElementById('exam-title').value = exam.title;
-    document.getElementById('exam-duration').value = exam.duration;
-    document.getElementById('exam-limit').value = exam.questionCount;
+        const labels = Object.keys(distribution);
+        const values = Object.values(distribution);
 
-    const modal = new bootstrap.Modal(document.getElementById('examModal'));
-    modal.show();
-}
+        // Palette matching the site's design
+        const colors = [
+            '#064e3b', // Dark Green
+            '#10b981', // Emerald
+            '#f59e0b', // Amber
+            '#3b82f6', // Blue
+            '#ec4899', // Pink
+            '#8b5cf6'  // Violet
+        ];
 
-function deleteExam(id) {
-    if (confirm('Are you sure you want to delete this exam? All related question associations will be removed.')) {
-        let exams = window.adminApp.getExams();
-        exams = exams.filter(ex => ex.id != id);
-        window.adminApp.saveExams(exams);
-        renderExams();
+        if (examChart) {
+            examChart.destroy();
+        }
+
+        examChart = new Chart(chartCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                family: "'Inter', sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((context.raw / total) * 100);
+                                return `${context.label}: ${context.raw} Exams (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
     }
-}
-
-window.editExam = editExam;
-window.deleteExam = deleteExam;
+});

@@ -87,11 +87,19 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Check slot isn't already booked
+// Check slot isn't already booked for this trainer
 $stmt = $pdo->prepare("SELECT id FROM reservations WHERE trainer_id = ? AND date = ? AND time = ? AND status != 'Cancelled'");
 $stmt->execute([$trainerId, $date, $time]);
 if ($stmt->fetch()) {
-    echo json_encode(['success' => false, 'message' => 'This time slot is already booked. Please choose another.']);
+    echo json_encode(['success' => false, 'message' => 'This trainer already has a booking at this time.']);
+    exit;
+}
+
+// Check student doesn't already have another booking at this same time/date
+$stmt = $pdo->prepare("SELECT id FROM reservations WHERE student_id = ? AND date = ? AND time = ? AND status != 'Cancelled'");
+$stmt->execute([$studentId, $date, $time]);
+if ($stmt->fetch()) {
+    echo json_encode(['success' => false, 'message' => 'You already have another lesson booked at this exact time.']);
     exit;
 }
 

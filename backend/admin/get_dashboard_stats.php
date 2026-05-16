@@ -28,6 +28,10 @@ try {
     $stmt = $pdo->query("SELECT COUNT(*) FROM reservations");
     $totalReservations = (int) $stmt->fetchColumn();
 
+    // 3.5 Total Exams
+    $stmt = $pdo->query("SELECT COUNT(*) FROM exams");
+    $totalExams = (int) $stmt->fetchColumn();
+
     // 4. Recent Reservations (last 5)
     $stmt = $pdo->query("
         SELECT r.id, r.status, 
@@ -60,7 +64,8 @@ try {
         'stats' => [
             'students' => $totalStudents,
             'trainers' => $totalTrainers,
-            'reservations' => $totalReservations
+            'reservations' => $totalReservations,
+            'exams' => $totalExams
         ],
         'recent_reservations' => $recentReservations,
         'trainer_distribution' => $trainerDistribution

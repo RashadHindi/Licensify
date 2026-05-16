@@ -18,19 +18,6 @@ require_once __DIR__ . '/../config/db.php';
 $trainerId = $_SESSION['user']['id'];
 
 try {
-    // Ensure trainer_feedback table exists
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `trainer_feedback` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `trainer_id` INT NOT NULL,
-            `student_id` INT NOT NULL,
-            `message` TEXT NOT NULL,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (`trainer_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-            FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-
     // Fetch distinct students and their total lessons with this trainer
     $stmt = $pdo->prepare("
         SELECT 

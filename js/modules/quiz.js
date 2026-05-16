@@ -21,33 +21,43 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!history.state) {
         history.replaceState({ view: 'categories' }, '', window.location.pathname);
     }
-    
+
     // Ensure we start at the top of the page
     window.scrollTo(0, 0);
 
-    // Initialize Categories
-    function initCategories() {
+    // Initialize Categories from Backend
+    async function initCategories() {
         const grid = document.getElementById('categories-grid');
         if (!grid) return;
 
-        grid.innerHTML = '';
-        
-        // Add Standard Categories
-        quizData.categories.forEach(cat => {
-            const card = document.createElement('div');
-            card.className = 'col-md-4 col-sm-6 mb-4';
-            card.innerHTML = `
-                <div class="card h-100 border-0 p-4 category-card rounded-4 shadow-sm" data-id="${cat.id}">
-                    <div class="icon-box mb-3 text-dark-green">
-                        <i class="bi ${cat.icon} fs-2"></i>
-                    </div>
-                    <h4 class="fw-bold heading-font mb-2">${cat.name}</h4>
-                    <p class="text-muted small mb-0">${cat.description}</p>
-                </div>
-            `;
-            card.addEventListener('click', () => selectCategory(cat.id));
-            grid.appendChild(card);
-        });
+        grid.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-dark-green" role="status"></div></div>';
+
+        try {
+            const response = await fetch('backend/exams/get_exams.php?action=categories');
+            const data = await response.json();
+
+            if (data.success) {
+                grid.innerHTML = '';
+                data.categories.forEach(cat => {
+                    const card = document.createElement('div');
+                    card.className = 'col-md-4 col-sm-6 mb-4';
+                    card.innerHTML = `
+                        <div class="card h-100 border-0 p-4 category-card rounded-4 shadow-sm" data-id="${cat.id}">
+                            <div class="icon-box mb-3 text-dark-green">
+                                <i class="bi ${cat.icon} fs-2"></i>
+                            </div>
+                            <h4 class="fw-bold heading-font mb-2">${cat.name}</h4>
+                            <p class="text-muted small mb-0">${cat.description}</p>
+                        </div>
+                    `;
+                    card.addEventListener('click', () => selectCategory(cat.id, cat.name));
+                    grid.appendChild(card);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            grid.innerHTML = '<p class="text-center text-danger">Failed to load categories.</p>';
+        }
     }
 
     function switchView(viewName, updateHistory = true) {
@@ -63,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const titleEl = document.getElementById('main-title');
         const subtitleEl = document.getElementById('main-subtitle');
         const headerSection = document.querySelector('.quiz-header');
-        
+
         // Reset header states
         headerSection.classList.remove('header-minimal', 'header-hidden', 'd-none');
 
         switch (viewName) {
-            case 'categories':  
+            case 'categories':
                 titleEl.textContent = "Theory Practice";
                 subtitleEl.textContent = "Choose your license category and begin your journey toward a successful driving test.";
                 break;
@@ -117,17 +127,37 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    function selectCategory(categoryId) {
+    async function selectCategory(categoryId, categoryName = null) {
         currentCategory = categoryId;
+        console.log('Category selected:', categoryId);
         const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
-        const catData = quizData.categories.find(c => c.id === categoryId);
-            
-        document.getElementById('selected-category-name').textContent = catData.name;
+
+        // If name not provided, we don't strictly need it for the label if we use the ID, 
+        // but for better UI we'll try to keep it consistent.
+        if (categoryName) {
+            document.getElementById('selected-category-name').textContent = categoryName;
+        }
 
         const quizList = document.getElementById('quiz-list');
+        quizList.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-dark-green" role="status"></div><p class="mt-2 text-muted">Loading exams for ' + categoryId + '...</p></div>';
+
+        // 1. Fetch Exams from Backend
+        console.log('Fetching exams for:', categoryId);
+        let exams = [];
+        try {
+            const response = await fetch(`backend/exams/get_exams.php?category=${categoryId}`);
+            const data = await response.json();
+            console.log('Exams received:', data);
+            if (data.success) {
+                exams = data.exams;
+            }
+        } catch (error) {
+            console.error('Error fetching exams:', error);
+        }
+
         quizList.innerHTML = '';
 
-        // 1. Add "Create" Box for Admins/Trainers
+        // 2. Add "Create" Box for Admins/Trainers
         if (user && (user.role === 'admin' || user.role === 'trainer')) {
             const createCol = document.createElement('div');
             createCol.className = 'col-md-4 col-sm-6';
@@ -146,33 +176,17 @@ document.addEventListener('DOMContentLoaded', function () {
             quizList.appendChild(createCol);
         }
 
-        // Get exams data
-        const availableStandard = quizData.questions[categoryId] || [];
-        const customExams = (JSON.parse(localStorage.getItem('licensify_custom_exams')) || []).filter(e => e.category === categoryId);
-        const deletedStandard = JSON.parse(localStorage.getItem('licensify_deleted_standard_exams')) || [];
-        
-        let globalIndex = 1;
-
-        // 2. Render Available Standard Exams (Filter out those deleted by admin)
-        availableStandard.forEach((quiz, idx) => {
-            const standardId = `std_${categoryId}_${idx}`;
-            if (!deletedStandard.includes(standardId)) {
-                renderExamCard(quizList, 'Mock Theory Exam', `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, false, () => startQuiz(idx), false, standardId);
-                globalIndex++;
-            }
+        // 3. Render Exams from Backend
+        exams.forEach((exam, idx) => {
+            const label = `Practice ${(idx + 1) < 10 ? '0' + (idx + 1) : (idx + 1)}`;
+            renderExamCard(quizList, exam.title, label, false, () => startQuiz(exam), false, exam.id);
         });
 
-        // 3. Render Custom Exams (Placed before Coming Soon)
-        customExams.forEach((exam, idx) => {
-            renderExamCard(quizList, exam.title, `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, false, () => startCustomQuiz(exam), true, exam.id);
-            globalIndex++;
-        });
-
-        // 4. Render "Coming Soon" Standard Exams (up to a total of 5 or more)
-        const totalStandardSlots = 5;
-        for (let i = availableStandard.length; i < totalStandardSlots; i++) {
-            renderExamCard(quizList, 'Coming Soon', `Practice ${globalIndex < 10 ? '0' + globalIndex : globalIndex}`, true);
-            globalIndex++;
+        // 4. Render "Coming Soon" Slots (up to a total of 5 or more)
+        const totalSlots = Math.max(5, exams.length);
+        for (let i = exams.length; i < totalSlots; i++) {
+            const label = `Practice ${(i + 1) < 10 ? '0' + (i + 1) : (i + 1)}`;
+            renderExamCard(quizList, 'Coming Soon', label, true);
         }
 
         switchView('quizzes');
@@ -186,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const quizCol = document.createElement('div');
         quizCol.className = 'col-md-4 col-sm-6';
-        
+
         // Show delete button only for admins/trainers on custom OR standard exams (if it has an ID)
         const canDelete = !isComingSoon && examId && user && (user.role === 'admin' || user.role === 'trainer');
 
@@ -210,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (canDelete) {
             quizCol.querySelector('.delete-exam-btn').addEventListener('click', (e) => {
-                e.stopPropagation(); 
+                e.stopPropagation();
                 confirmDeleteFullExam(examId, isCustom);
             });
         }
@@ -224,45 +238,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-        
+
         container.appendChild(quizCol);
     }
 
     function confirmDeleteFullExam(examId, isCustom) {
         const deleteModal = new bootstrap.Modal(document.getElementById('builderDeleteConfirmModal'));
         const confirmBtn = document.getElementById('confirm-delete-q-btn');
-        
+
         const modalTitle = document.querySelector('#builderDeleteConfirmModal h5');
         const modalBody = document.querySelector('#builderDeleteConfirmModal p');
         const originalTitle = modalTitle.textContent;
         const originalBody = modalBody.textContent;
 
-        modalTitle.textContent = isCustom ? "Delete Custom Exam?" : "Remove Standard Exam?";
-        modalBody.textContent = "Are you sure you want to remove this mock exam from the list? This action cannot be undone.";
-        
+        modalTitle.textContent = "Delete Mock Exam?";
+        modalBody.textContent = "Are you sure you want to remove this mock exam? This will delete the exam and all its questions forever.";
+
         deleteModal.show();
 
-        confirmBtn.onclick = () => {
-            if (isCustom) {
-                let customExams = JSON.parse(localStorage.getItem('licensify_custom_exams')) || [];
-                customExams = customExams.filter(e => e.id !== examId);
-                localStorage.setItem('licensify_custom_exams', JSON.stringify(customExams));
-            } else {
-                let deletedStandard = JSON.parse(localStorage.getItem('licensify_deleted_standard_exams')) || [];
-                if (!deletedStandard.includes(examId)) {
-                    deletedStandard.push(examId);
-                    localStorage.setItem('licensify_deleted_standard_exams', JSON.stringify(deletedStandard));
+        confirmBtn.onclick = async () => {
+            try {
+                const response = await fetch('backend/exams/delete_exam.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: examId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showSuccessToast('Exam deleted successfully.');
+                    if (window.refreshQuizzes) window.refreshQuizzes();
+                } else {
+                    alert(data.message || 'Failed to delete exam.');
                 }
+            } catch (error) {
+                console.error('Error deleting exam:', error);
             }
-            
+
             deleteModal.hide();
-            
+
             setTimeout(() => {
                 modalTitle.textContent = originalTitle;
                 modalBody.textContent = originalBody;
             }, 500);
-
-            if (window.refreshQuizzes) window.refreshQuizzes();
         };
     }
 
@@ -279,18 +296,9 @@ document.addEventListener('DOMContentLoaded', function () {
         backToCatBtn.addEventListener('click', () => switchView('categories'));
     }
 
-    function startQuiz(index) {
-        currentQuizIndex = index;
-        const rawQuestions = quizData.questions[currentCategory][index];
-
-        // Randomize questions as requested
-        currentQuestions = [...rawQuestions].sort(() => Math.random() - 0.5);
-        setupQuizSession();
-    }
-
-    function startCustomQuiz(exam) {
-        currentQuizIndex = -1;
-        currentQuestions = [...exam.questions];
+    function startQuiz(exam) {
+        currentQuizIndex = exam.id;
+        currentQuestions = [...exam.questions].sort(() => Math.random() - 0.5);
         setupQuizSession();
     }
 
@@ -450,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Save result for dashboard
         if (window.authApp) {
-            // 1. Update Test Scores History
+            // 1. Update Test Scores History (Local storage for immediate UI feedback)
             const existingScores = window.authApp.getUserData('test_scores') || [];
             const newScoreRecord = {
                 score: correct,
@@ -459,25 +467,51 @@ document.addEventListener('DOMContentLoaded', function () {
                 date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
                 category: currentCategory
             };
-            existingScores.unshift(newScoreRecord); // Add to beginning
-            window.authApp.saveUserData('test_scores', existingScores.slice(0, 10)); // Keep last 10
-            window.authApp.saveUserData('latest_test_score', newScoreRecord); // For immediate UI updates
+            existingScores.unshift(newScoreRecord);
+            window.authApp.saveUserData('test_scores', existingScores.slice(0, 10));
+            window.authApp.saveUserData('latest_test_score', newScoreRecord);
 
-            // 2. Track Mistakes for Progress Insights
+            // 2. Track Mistakes
             const mistakes = currentQuestions.filter((q, idx) => userAnswers[idx] !== q.correctAnswer).map(q => ({
+                id: q.id,
                 text: q.text,
-                topic: q.topic || currentCategory, // Use specific topic if available
+                topic: q.topic || currentCategory,
                 explanation: q.explanation,
-                correctAnswer: q.options[q.correctAnswer] // Save the actual answer text
+                correctAnswer: q.options[q.correctAnswer]
             }));
-            
+
             if (mistakes.length > 0) {
                 const existingMistakes = window.authApp.getUserData('quiz_mistakes') || [];
-                // Combine and keep unique recent mistakes (last 5)
                 const updatedMistakes = [...mistakes, ...existingMistakes].filter((m, index, self) =>
                     index === self.findIndex((t) => t.text === m.text)
                 ).slice(0, 5);
                 window.authApp.saveUserData('quiz_mistakes', updatedMistakes);
+            }
+
+            // 3. PERSISTENT SAVE TO DATABASE
+            if (window.authApp.isLoggedIn()) {
+                const mistakeIds = mistakes.map(m => m.id).filter(id => id !== undefined);
+                
+                fetch('backend/exams/save_result.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        exam_id: currentQuizIndex,
+                        score: correct,
+                        total_questions: currentQuestions.length,
+                        percentage: scorePercentage,
+                        mistakes: mistakeIds
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('[LICENSIFY] Result synced to database.');
+                    } else {
+                        console.warn('[LICENSIFY] Database sync failed:', data.message);
+                    }
+                })
+                .catch(err => console.error('[LICENSIFY] Sync Error:', err));
             }
         }
 
@@ -495,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
         switchView('quizzes');
     });
     document.getElementById('btn-back-categories-2').addEventListener('click', () => switchView('results'));
-    
+
     // Quit Quiz
     const quitBtn = document.getElementById('btn-quit-quiz');
     if (quitBtn) {

@@ -10,7 +10,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Custom CSS -->
@@ -18,7 +20,7 @@
     <link href="css/pages/aboutus.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <script>
-        (function() {
+        (function () {
             const user = sessionStorage.getItem('licensify_current_user');
             if (user) {
                 document.documentElement.classList.add('auth-is-logged-in');
@@ -37,7 +39,9 @@
                 <img src="images/Licensify-Logo2.png" class="logo-icon" alt="Licensify">
                 <span class="fw-bold fs-4 heading-font text-dark-green">Licensify</span>
             </a>
-            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false"
+                aria-label="Toggle navigation">
                 <i class="bi bi-list fs-1 text-dark-green"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarContent">
@@ -48,7 +52,8 @@
                     <li class="nav-item"><a class="nav-link" href="index.html#practice-test">Practice Test</a></li>
                     <li class="nav-item"><a class="nav-link" href="index.html#practice">Book Lessons</a></li>
                 </ul>
-                <div class="navbar-auth-guest-wrapper d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
+                <div
+                    class="navbar-auth-guest-wrapper d-flex flex-column flex-lg-row align-items-lg-center gap-4 mt-3 mt-lg-0">
                     <a href="#"
                         class="text-decoration-none fw-bold fs-7 text-uppercase text-dark-green pe-lg-3">Login</a>
                     <a href="#" class="btn btn-primary btn-rounded px-4 py-2 fw-semibold shadow-sm">Sign Up</a>
@@ -76,18 +81,19 @@
             <div class="col-lg-6 mb-4 mb-lg-0 text-center text-lg-start">
                 <h2 class="display-6 fw-bold heading-font text-dark-green mb-4">Driving Education, Reimagined</h2>
                 <p class="fs-5 text-muted lh-lg">
-                    <strong class="text-dark-green">Licensify</strong> is not just another driving school. It's a comprehensive platform built to bridge the gap between theoretical knowledge and real-world road confidence. We combine an innovative educational curriculum with hands-on, expert-led training to ensure our students become safe, skilled drivers.
+                    <strong class="text-dark-green">Licensify</strong> is not just another driving school. It's a
+                    comprehensive platform built to bridge the gap between theoretical knowledge and real-world road
+                    confidence. We combine an innovative educational curriculum with hands-on, expert-led training to
+                    ensure our students become safe, skilled drivers.
                 </p>
             </div>
             <div class="col-lg-6">
-                <!-- Image Placeholder -->
-                <div class="about-image-placeholder rounded-4 shadow-sm" style="background-color: var(--color-light-green); border: 2px dashed rgba(18, 53, 36, 0.3); height: 350px; display: flex; align-items: center; justify-content: center;">
-                    <div class="text-center text-dark-green opacity-75">
-                        <i class="bi bi-image fs-1 mb-2 d-block"></i>
-                        <span class="fw-bold d-block">About Us Image</span>
-                        <span class="small">(Replace with your own &lt;img&gt; tag later)</span>
-                    </div>
-                </div>
+               <img 
+                 src="images/content.png" 
+                alt="About Us Image"
+                class="img-fluid rounded-4 shadow-sm"
+                style="height: 350px; width: 100%; object-fit: cover;"
+             >
             </div>
         </section>
 
@@ -100,7 +106,9 @@
                     </div>
                     <h3 class="fw-bold heading-font text-dark-green mb-3">Our Mission</h3>
                     <p class="text-muted mb-0 lh-lg">
-                        To empower individuals with the confidence and skills required to navigate the roads safely. We strive to offer an accessible, high-quality, and modern learning experience that transforms beginners into cautious and competent drivers.
+                        To empower individuals with the confidence and skills required to navigate the roads safely. We
+                        strive to offer an accessible, high-quality, and modern learning experience that transforms
+                        beginners into cautious and competent drivers.
                     </p>
                 </div>
             </div>
@@ -111,7 +119,9 @@
                     </div>
                     <h3 class="fw-bold heading-font text-dark-green mb-3">Our Vision</h3>
                     <p class="text-muted mb-0 lh-lg">
-                        To become the industry standard for driver education globally. We envision a future where road accidents are significantly reduced because every new driver has access to the best theoretical resources and practical mentoring.
+                        To become the industry standard for driver education globally. We envision a future where road
+                        accidents are significantly reduced because every new driver has access to the best theoretical
+                        resources and practical mentoring.
                     </p>
                 </div>
             </div>
@@ -125,8 +135,9 @@
             </div>
 
             <div class="road-timeline">
-                <svg id="road-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></svg>
-                
+                <svg id="road-svg"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></svg>
+
                 <!-- 2022 -->
                 <div class="milestone left-side scroll-animate">
                     <div class="milestone-marker">
@@ -135,7 +146,8 @@
                     <div class="milestone-content text-start">
                         <span class="m-year">2022</span>
                         <h4 class="m-title">The Starting Line</h4>
-                        <p class="m-desc">The idea of Licensify was born from a simple need to make driving education more transparent and accessible. We mapped the curriculum and drafted our core vision.</p>
+                        <p class="m-desc">The idea of Licensify was born from a simple need to make driving education
+                            more transparent and accessible. We mapped the curriculum and drafted our core vision.</p>
                     </div>
                 </div>
 
@@ -144,7 +156,8 @@
                     <div class="milestone-content text-end">
                         <span class="m-year">2023</span>
                         <h4 class="m-title">First Gear</h4>
-                        <p class="m-desc">We completed our first set of theoretical quizzes and launched a closed beta test. Feedback from our very first students helped us refine the learning journey.</p>
+                        <p class="m-desc">We completed our first set of theoretical quizzes and launched a closed beta
+                            test. Feedback from our very first students helped us refine the learning journey.</p>
                     </div>
                     <div class="milestone-marker">
                         <div class="dot-marker"></div>
@@ -159,7 +172,8 @@
                     <div class="milestone-content text-start">
                         <span class="m-year">2024</span>
                         <h4 class="m-title">Cruising Speed</h4>
-                        <p class="m-desc">Licensify officially launched to the public. We began partnering with local independent trainers, creating our first network of certified instructors.</p>
+                        <p class="m-desc">Licensify officially launched to the public. We began partnering with local
+                            independent trainers, creating our first network of certified instructors.</p>
                     </div>
                 </div>
 
@@ -168,7 +182,8 @@
                     <div class="milestone-content text-end">
                         <span class="m-year">2025</span>
                         <h4 class="m-title">Expanding the Fleet</h4>
-                        <p class="m-desc">We introduced advanced booking capabilities and trainer portfolios, allowing students to seamlessly book in-car lessons through a centralized dashboard.</p>
+                        <p class="m-desc">We introduced advanced booking capabilities and trainer portfolios, allowing
+                            students to seamlessly book in-car lessons through a centralized dashboard.</p>
                     </div>
                     <div class="milestone-marker">
                         <div class="dot-marker"></div>
@@ -183,7 +198,9 @@
                     <div class="milestone-content text-start">
                         <span class="m-year">2026</span>
                         <h4 class="m-title">The Open Road</h4>
-                        <p class="m-desc">Licensify continues to grow, adding new features like enhanced driving analytics and interactive exam simulations. We are steadily driving towards our vision of safer roads.</p>
+                        <p class="m-desc">Licensify continues to grow, adding new features like enhanced driving
+                            analytics and interactive exam simulations. We are steadily driving towards our vision of
+                            safer roads.</p>
                     </div>
                 </div>
             </div>
@@ -272,26 +289,26 @@
                 const svg = document.getElementById('road-svg');
                 const timeline = document.querySelector('.road-timeline');
                 const markers = document.querySelectorAll('.milestone-marker');
-                
+
                 if (!svg || !timeline || markers.length === 0) return;
-                
+
                 svg.setAttribute('height', timeline.offsetHeight);
-                
+
                 let pathD = '';
                 let dashedPathD = '';
                 let prevX = 0;
                 let prevY = 0;
-                
+
                 markers.forEach((marker, index) => {
                     const icon = marker.querySelector('.dot-marker, .car-icon');
                     if (!icon) return;
-                    
+
                     const rect = icon.getBoundingClientRect();
                     const tlRect = timeline.getBoundingClientRect();
-                    
+
                     const x = rect.left - tlRect.left + rect.width / 2;
                     const y = rect.top - tlRect.top + rect.height / 2;
-                    
+
                     if (index === 0) {
                         pathD += `M ${x} ${y} `;
                         dashedPathD += `M ${x} ${y} `;
@@ -301,11 +318,11 @@
                         pathD += `C ${prevX} ${cpY}, ${x} ${cpY}, ${x} ${y} `;
                         dashedPathD += `C ${prevX} ${cpY}, ${x} ${cpY}, ${x} ${y} `;
                     }
-                    
+
                     prevX = x;
                     prevY = y;
                 });
-                
+
                 svg.innerHTML = `
                     <path d="${pathD}" stroke="#3b4240" stroke-width="40" fill="none" stroke-linejoin="round" />
                     <path d="${dashedPathD}" stroke="#fff" stroke-width="4" fill="none" stroke-linejoin="round" stroke-dasharray="12, 12" />
@@ -315,9 +332,9 @@
             // Draw road on load and ensure it resizes correctly
             window.addEventListener('load', drawRoad);
             window.addEventListener('resize', drawRoad);
-            
+
             // Initial draw
-            setTimeout(drawRoad, 100); 
+            setTimeout(drawRoad, 100);
         });
     </script>
 </body>

@@ -27,6 +27,7 @@
             { id: 'students', label: 'Students', icon: 'bi-people', link: 'admin-students.html' },
             { id: 'trainers', label: 'Trainers', icon: 'bi-person-badge', link: 'admin-trainers.html' },
             { id: 'reservations', label: 'Reservations', icon: 'bi-calendar-check', link: 'admin-reservations.html' },
+            { id: 'exams', label: 'Exams', icon: 'bi-journal-check', link: 'admin-exams.html' },
             { id: 'feedback', label: 'Feedback & Reports', icon: 'bi-chat-left-text', link: 'admin-feedback.html' },
             { id: 'settings', label: 'Settings', icon: 'bi-gear', link: 'admin-settings.html' }
         ];
@@ -73,8 +74,14 @@
             if (btn) {
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
+                    // Clear frontend session
                     sessionStorage.removeItem('licensify_current_user');
-                    window.location.href = 'index.html';
+                    
+                    // Clear backend session
+                    fetch('backend/auth/logout.php')
+                        .finally(() => {
+                            window.location.href = 'index.html';
+                        });
                 });
             }
         });

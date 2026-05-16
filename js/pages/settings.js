@@ -35,16 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h5 class="fw-bold text-dark-green mb-1 heading-font">${user.fname} ${user.lname}</h5>
                         <p class="text-muted smaller mb-3">${user.email}</p>
                         <span class="badge bg-light-green text-dark-green rounded-pill px-3 py-2 fw-medium">${user.role === 'admin' ? 'Administrator' : 'Verified Student'}</span>
-                        
-                        <div class="mt-4 pt-4 border-top text-start">
-                            <p class="smaller text-muted mb-2 text-uppercase fw-bold opacity-50" style="letter-spacing: 1px;">Quick Actions</p>
-                            <button class="btn btn-sm btn-light w-100 text-start py-2 mb-2 rounded-3 d-flex align-items-center gap-2">
-                                <i class="bi bi-shield-lock text-dark-green"></i> 2FA Settings
-                            </button>
-                            <button class="btn btn-sm btn-light w-100 text-start py-2 rounded-3 d-flex align-items-center gap-2">
-                                <i class="bi bi-download text-dark-green"></i> Export Data
-                            </button>
-                        </div>
                     </div>
                 </div>
                 
@@ -77,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </form>
                     </div>
 
-                    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
                         <h5 class="fw-bold text-dark-green mb-4 heading-font">Security</h5>
                         <form>
                             <div class="mb-3">
@@ -99,28 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="update-password-btn">Update Password</button>
                             </div>
                         </form>
-                    </div>
-
-                    <div class="card border-0 shadow-sm rounded-4 p-4">
-                        <h5 class="fw-bold text-dark-green mb-4 heading-font">Notification Preferences</h5>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                            <div>
-                                <h6 class="fw-bold mb-0">Email Notifications</h6>
-                                <p class="text-muted smaller mb-0">Receive lesson reminders and updates via email.</p>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" checked>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <div>
-                                <h6 class="fw-bold mb-0">Marketing News</h6>
-                                <p class="text-muted smaller mb-0">Stay updated with new courses and discounts.</p>
-                            </div>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" checked>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

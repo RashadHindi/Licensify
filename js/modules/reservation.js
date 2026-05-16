@@ -14,11 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const trainersContainer = document.getElementById('trainers-container');
     const calendarDays = document.getElementById('calendar-days');
-    const rdPanel = document.getElementById('reservation-details-panel');
-    const rdDate = document.getElementById('rd-date');
-    const rdTime = document.getElementById('rd-time');
-    const rdTrainer = document.getElementById('rd-trainer');
-    const rdCar = document.getElementById('rd-car');
+    const rdContainer = document.getElementById('reservation-details-container');
     const toastContainer = document.getElementById('toast-container');
     const trainerSearchInput = document.getElementById('trainer-search');
 
@@ -55,23 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========================
     function loadTrainers() {
         fetch('backend/schedule/get_trainers.php')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                trainers = data.trainers.map(t => ({
-                    id: t.id,
-                    name: `${t.fname} ${t.lname}`,
-                    profile_photo: t.profile_photo,
-                    phone: t.phone,
-                    experience: t.experience || 'New Trainer',
-                    carType: t.car_type || 'General',
-                    rating: t.rating || '0.0',
-                    reviews: t.reviews || '0'
-                }));
-                renderTrainers(trainers);
-            }
-        })
-        .catch(err => console.error('Failed to load trainers:', err));
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    trainers = data.trainers.map(t => ({
+                        id: t.id,
+                        name: `${t.fname} ${t.lname}`,
+                        profile_photo: t.profile_photo,
+                        phone: t.phone,
+                        experience: t.experience || 'New Trainer',
+                        carType: t.car_type || 'General',
+                        rating: t.rating || '0.0',
+                        reviews: t.reviews || '0'
+                    }));
+                    renderTrainers(trainers);
+                }
+            })
+            .catch(err => console.error('Failed to load trainers:', err));
     }
 
     // ========================
@@ -85,26 +81,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         fetch('backend/schedule/get_student_reservations.php')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                myReservations = {};
-                data.reservations.forEach(r => {
-                    if (r.status === 'Upcoming') {
-                        const prettyDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                        myReservations[r.date] = {
-                            id: r.id,
-                            date: prettyDate,
-                            time: r.time,
-                            trainer: r.trainer,
-                            status: r.status
-                        };
-                    }
-                });
-                renderCalendar();
-            }
-        })
-        .catch(err => console.error('Failed to load reservations:', err));
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    myReservations = {};
+                    data.reservations.forEach(r => {
+                        if (r.status === 'Upcoming') {
+                            const prettyDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                            
+                            if (!myReservations[r.date]) {
+                                myReservations[r.date] = [];
+                            }
+                            
+                            myReservations[r.date].push({
+                                id: r.id,
+                                date: prettyDate,
+                                time: r.time,
+                                trainer: r.trainer,
+                                status: r.status,
+                                car_type: r.car_type
+                            });
+                        }
+                    });
+                    renderCalendar();
+                }
+            })
+            .catch(err => console.error('Failed to load reservations:', err));
     }
 
     // ========================
@@ -123,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             col.className = 'col-md-6 mb-4';
 
             const initial = trainer.name.charAt(0).toUpperCase();
-            const photoHtml = trainer.profile_photo 
+            const photoHtml = trainer.profile_photo
                 ? `<img src="${trainer.profile_photo}" class="w-100 h-100 object-fit-cover">`
                 : `<i class="bi bi-person-bounding-box"></i>`;
 
@@ -141,8 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         
                         <div class="trainer-badges">
-                            <span class="t-badge"><i class="bi bi-award me-1"></i>${trainer.experience}</span>
-                            <span class="t-badge"><i class="bi bi-car-front me-1"></i>${trainer.carType}</span>
+                            <span class="t-badge"><i class="bi bi-award me-1"></i>${trainer.experience || '1 Year'}</span>
+                            <span class="t-badge"><i class="bi bi-car-front me-1"></i>${trainer.carType || 'Manual & Auto'}</span>
                         </div>
                         
                         <div class="booking-form">
@@ -171,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             flatpickr(dateInput, {
                 minDate: "today",
                 dateFormat: "Y-m-d",
-                onChange: function(selectedDates, dateStr, instance) {
+                onChange: function (selectedDates, dateStr, instance) {
                     if (!dateStr) {
                         slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
                         bookBtn.classList.add('d-none');
@@ -184,69 +186,69 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedSlot = null;
 
                     fetch(`backend/schedule/get_trainer_slots.php?trainer_id=${trainer.id}&date=${dateStr}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (!data.success) {
-                            slotsContainer.innerHTML = `<div class="text-danger small">Failed to load slots.</div>`;
-                            return;
-                        }
-
-                        if (data.is_day_off) {
-                            slotsContainer.innerHTML = `<div class="text-danger small fw-bold"><i class="bi bi-calendar-x me-1"></i>Trainer is off on this day</div>`;
-                            return;
-                        }
-
-                        const blocked = [...data.unavailable_slots, ...data.booked_slots];
-
-                        // Only show slots that are truly available and in the future
-                        const now = new Date();
-                        const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-                        
-                        const availableSlots = allSlots.filter(s => {
-                            if (blocked.includes(s)) return false;
-                            
-                            // If booking for today, make sure the slot hasn't already passed
-                            if (dateStr === todayStr) {
-                                const match = s.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                                if (match) {
-                                    let [_, hours, mins, modifier] = match;
-                                    hours = parseInt(hours);
-                                    if (modifier.toUpperCase() === 'PM' && hours < 12) hours += 12;
-                                    if (modifier.toUpperCase() === 'AM' && hours === 12) hours = 0;
-                                    
-                                    const slotTime = new Date();
-                                    slotTime.setHours(hours, parseInt(mins), 0, 0);
-                                    if (now > slotTime) return false;
-                                }
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.success) {
+                                slotsContainer.innerHTML = `<div class="text-danger small">Failed to load slots.</div>`;
+                                return;
                             }
-                            return true;
-                        });
 
-                        if (availableSlots.length === 0) {
-                            slotsContainer.innerHTML = `<div class="text-warning small fw-bold"><i class="bi bi-exclamation-circle me-1"></i>No available slots on this day</div>`;
-                            return;
-                        }
+                            if (data.is_day_off) {
+                                slotsContainer.innerHTML = `<div class="text-danger small fw-bold"><i class="bi bi-calendar-x me-1"></i>Trainer is off on this day</div>`;
+                                return;
+                            }
 
-                        slotsContainer.innerHTML = '';
-                        availableSlots.forEach(slot => {
-                            const slotEl = document.createElement('div');
-                            slotEl.className = 'timeslot';
-                            slotEl.innerText = slot;
+                            const blocked = [...data.unavailable_slots, ...data.booked_slots];
 
-                            slotEl.addEventListener('click', () => {
-                                slotsContainer.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
-                                slotEl.classList.add('selected');
-                                selectedSlot = slot;
-                                bookBtn.classList.remove('d-none');
+                            // Only show slots that are truly available and in the future
+                            const now = new Date();
+                            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+                            const availableSlots = allSlots.filter(s => {
+                                if (blocked.includes(s)) return false;
+
+                                // If booking for today, make sure the slot hasn't already passed
+                                if (dateStr === todayStr) {
+                                    const match = s.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                                    if (match) {
+                                        let [_, hours, mins, modifier] = match;
+                                        hours = parseInt(hours);
+                                        if (modifier.toUpperCase() === 'PM' && hours < 12) hours += 12;
+                                        if (modifier.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+                                        const slotTime = new Date();
+                                        slotTime.setHours(hours, parseInt(mins), 0, 0);
+                                        if (now > slotTime) return false;
+                                    }
+                                }
+                                return true;
                             });
 
-                            slotsContainer.appendChild(slotEl);
+                            if (availableSlots.length === 0) {
+                                slotsContainer.innerHTML = `<div class="text-warning small fw-bold"><i class="bi bi-exclamation-circle me-1"></i>No available slots on this day</div>`;
+                                return;
+                            }
+
+                            slotsContainer.innerHTML = '';
+                            availableSlots.forEach(slot => {
+                                const slotEl = document.createElement('div');
+                                slotEl.className = 'timeslot';
+                                slotEl.innerText = slot;
+
+                                slotEl.addEventListener('click', () => {
+                                    slotsContainer.querySelectorAll('.timeslot').forEach(el => el.classList.remove('selected'));
+                                    slotEl.classList.add('selected');
+                                    selectedSlot = slot;
+                                    bookBtn.classList.remove('d-none');
+                                });
+
+                                slotsContainer.appendChild(slotEl);
+                            });
+                        })
+                        .catch(err => {
+                            console.error('Slot fetch error:', err);
+                            slotsContainer.innerHTML = `<div class="text-danger small">Connection error. Please try again.</div>`;
                         });
-                    })
-                    .catch(err => {
-                        console.error('Slot fetch error:', err);
-                        slotsContainer.innerHTML = `<div class="text-danger small">Connection error. Please try again.</div>`;
-                    });
                 }
             });
 
@@ -280,33 +282,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            showToast(rescheduleId ? `Successfully rescheduled with ${trainer.name} to ${prettyDate} at ${selectedSlot}.` : `Successfully booked ${trainer.name} on ${prettyDate} at ${selectedSlot}.`);
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast(rescheduleId ? `Successfully rescheduled with ${trainer.name} to ${prettyDate} at ${selectedSlot}.` : `Successfully booked ${trainer.name} on ${prettyDate} at ${selectedSlot}.`);
 
-                            // Reset form
-                            dateInput.value = '';
-                            dateInput._flatpickr.clear();
-                            slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
-                            bookBtn.classList.add('d-none');
-                            selectedSlot = null;
+                                // Reset form
+                                dateInput.value = '';
+                                dateInput._flatpickr.clear();
+                                slotsContainer.innerHTML = `<div class="text-muted small">Select a date to view slots</div>`;
+                                bookBtn.classList.add('d-none');
+                                selectedSlot = null;
 
-                            // If rescheduled, redirect back to schedule
-                            if (rescheduleId) {
-                                setTimeout(() => window.location.href = 'schedule.html', 1500);
+                                // If rescheduled, redirect back to schedule
+                                if (rescheduleId) {
+                                    setTimeout(() => window.location.href = 'schedule.html', 1500);
+                                }
+
+                                // Reload reservations to update calendar
+                                loadReservations();
+                            } else {
+                                showToastError(data.message || 'Booking failed. Please try again.');
                             }
-
-                            // Reload reservations to update calendar
-                            loadReservations();
-                        } else {
-                            showToastError(data.message || 'Booking failed. Please try again.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Booking error:', err);
-                        showToastError('A connection error occurred. Please try again.');
-                    });
+                        })
+                        .catch(err => {
+                            console.error('Booking error:', err);
+                            showToastError('A connection error occurred. Please try again.');
+                        });
                 }
             });
         });
@@ -319,9 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarDays.innerHTML = '';
 
         const firstDay = new Date(currentCalYear, currentCalMonth, 1);
-        const startDayOffset = firstDay.getDay(); 
+        const startDayOffset = firstDay.getDay();
         const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
-        
+
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         if (calendarHeaderTitle) calendarHeaderTitle.innerText = `${monthNames[currentCalMonth]} ${currentCalYear}`;
 
@@ -358,16 +360,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function showReservationDetails(data) {
-        rdDate.innerText = data.date;
-        rdTime.innerText = data.time;
-        rdTrainer.innerText = data.trainer;
-        if (rdCar) rdCar.innerText = data.status || 'Upcoming';
-        rdPanel.classList.add('active');
+    function showReservationDetails(reservations) {
+        if (!reservations || reservations.length === 0) {
+            hideReservationDetails();
+            return;
+        }
+
+        // Clear the container
+        rdContainer.innerHTML = '';
+
+        // Create a title card or just start with items
+        const titleEl = document.createElement('div');
+        titleEl.className = 'rd-title-main text-white fw-bold mb-3 mt-4';
+        titleEl.innerText = 'Reservation Details';
+        rdContainer.appendChild(titleEl);
+
+        reservations.forEach(data => {
+            const card = document.createElement('div');
+            card.className = 'reservation-details active'; // This has the white background & padding
+            card.style.display = 'block'; // Ensure it's visible
+            card.style.marginTop = '0.75rem';
+
+            card.innerHTML = `
+                <div class="rd-info-row">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>${data.date}</span>
+                </div>
+                <div class="rd-info-row">
+                    <i class="bi bi-clock"></i>
+                    <span>${data.time}</span>
+                </div>
+                <div class="rd-info-row">
+                    <i class="bi bi-person-badge"></i>
+                    <span>${data.trainer}</span>
+                </div>
+                <div class="rd-info-row mb-0">
+                    <i class="bi bi-car-front"></i>
+                    <span>${data.car_type || 'Manual & Auto'}</span>
+                </div>
+            `;
+            rdContainer.appendChild(card);
+        });
     }
 
     function hideReservationDetails() {
-        rdPanel.classList.remove('active');
+        rdContainer.innerHTML = '';
     }
 
     // ========================

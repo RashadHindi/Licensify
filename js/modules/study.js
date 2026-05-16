@@ -48,8 +48,41 @@ document.addEventListener('DOMContentLoaded', () => {
         'safety-basics': 'not-started',
         'practice-test': 'not-started'
     };
-    
+
     let progress = window.authApp.getUserData('study_progress') || defaultProgress;
+
+    // Load progress from database if logged in
+    if (window.authApp.isLoggedIn()) {
+        Promise.all([
+            fetch('backend/study/get_progress.php').then(res => res.json()),
+            fetch('backend/exams/get_stats.php').then(res => res.json())
+        ])
+        .then(([progressData, statsData]) => {
+            if (progressData.success && progressData.progress) {
+                progress = { ...defaultProgress, ...progressData.progress };
+            }
+            
+            // New Logic for Practice Theory Test:
+            // Unstarted: 0 exams taken
+            // In Progress: 1+ exams taken, but < 3 passed
+            // Completed: 3+ passed with 80% or higher
+            if (statsData.success) {
+                if (statsData.total_passed >= 3) {
+                    progress['practice-test'] = 'completed';
+                } else if (statsData.total_attempted > 0) {
+                    progress['practice-test'] = 'in-progress';
+                } else {
+                    progress['practice-test'] = 'not-started';
+                }
+            } else {
+                progress['practice-test'] = 'not-started';
+            }
+            
+            window.authApp.saveUserData('study_progress', progress);
+            renderRoadmap();
+        })
+        .catch(err => console.error('Error fetching progress data:', err));
+    }
 
     const roadmapContainer = document.getElementById('roadmap-steps');
     const viewRoadmap = document.getElementById('view-roadmap');
@@ -293,13 +326,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (progress[topicId] === 'not-started') {
                 progress[topicId] = 'in-progress';
                 window.authApp.saveUserData('study_progress', progress);
+
+                // Sync to backend
+                if (window.authApp.isLoggedIn()) {
+                    fetch('backend/study/save_progress.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic_id: topicId, status: 'in-progress' })
+                    }).catch(err => console.error('Error saving progress:', err));
+                }
+
                 renderRoadmap();
             }
 
             topicTitle.innerText = data.title;
             topicBadge.innerText = data.badge;
             topicContent.innerHTML = '';
-            
+
             if (topicExtendedHeader) {
                 topicExtendedHeader.innerHTML = '';
                 topicExtendedHeader.classList.add('d-none');
@@ -403,6 +446,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isCompleted) {
                 progress[topicId] = 'in-progress';
                 window.authApp.saveUserData('study_progress', progress);
+
+                // Sync to backend
+                if (window.authApp.isLoggedIn()) {
+                    fetch('backend/study/save_progress.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic_id: topicId, status: 'in-progress' })
+                    }).catch(err => console.error('Error saving progress:', err));
+                }
+
                 renderRoadmap();
                 // Stay on current page and update button
                 this.openTopic(topicId);
@@ -417,6 +470,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 window.authApp.saveUserData('study_progress', progress);
+
+                // Sync to backend
+                if (window.authApp.isLoggedIn()) {
+                    fetch('backend/study/save_progress.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            topic_id: topicId,
+                            status: progress[topicId],
+                            completed_items: progress[topicId + '_completed'] || 0
+                        })
+                    }).catch(err => console.error('Error saving progress:', err));
+
+                    // If we auto-started the next topic, sync that too
+                    const nextIndex = currentIndex + 1;
+                    if (nextIndex < roadmapSteps.length) {
+                        const nextId = roadmapSteps[nextIndex].id;
+                        if (progress[nextId] === 'in-progress') {
+                            fetch('backend/study/save_progress.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ topic_id: nextId, status: 'in-progress' })
+                            }).catch(err => console.error('Error saving next progress:', err));
+                        }
+                    }
+                }
+
                 renderRoadmap();
                 // When marked as complete, redirect back to roadmap
                 if (btnBackRoadmap) btnBackRoadmap.click();

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Exams | Licensify Admin</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/pages/dashboard.css" rel="stylesheet">
+</head>
+<body class="bg-off-white">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-scrolled shadow-sm">
+        <div class="container-fluid px-4 px-lg-5 py-2">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+                <img src="images/Licensify-Logo2.png" class="logo-icon" alt="Licensify">
+                <span class="fw-bold fs-4 heading-font text-dark-green">Licensify</span>
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <i class="bi bi-list fs-1 text-dark-green"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1 gap-lg-4 fs-6 fw-medium text-uppercase text-tracking">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="study.html">Study</a></li>
+                    <li class="nav-item"><a class="nav-link" href="exams.html">Practice Test</a></li>
+                    <li class="nav-item"><a class="nav-link" href="reservation.html">Book Lessons</a></li>
+                </ul>
+                <div class="navbar-auth-user-wrapper mt-3 mt-lg-0"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Content -->
+    <main class="py-6 mt-5">
+        <div class="container">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-3 mb-4">
+                    <div id="sidebar-container"></div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-lg-9 animate-fade">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-white border-0 py-4 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div>
+                                <h4 class="fw-bold text-dark-green heading-font mb-1">Theory Exams Overview</h4>
+                                <p class="text-muted small mb-0">Analytics showing who added the most exams to the system.</p>
+                            </div>
+                            
+                            <!-- Chart Canvas Container -->
+                            <div class="w-100 mt-4 mb-2" style="max-height: 250px; position: relative;">
+                                <canvas id="examCreatorChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card-header bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark-green smaller">Available Exams List</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="border-0 px-4 smaller text-uppercase">Title</th>
+                                            <th class="border-0 px-4 smaller text-uppercase">Category</th>
+                                            <th class="border-0 px-4 smaller text-uppercase">Creator</th>
+                                            <th class="border-0 px-4 smaller text-uppercase">Created At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exams-table-body">
+                                        <!-- Dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/core/common.js"></script>
+    <script src="js/pages/admin/common.js"></script>
+    <script src="js/pages/admin/exams.js"></script>
+</body>
+</html>

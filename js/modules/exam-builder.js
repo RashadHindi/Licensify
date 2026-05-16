@@ -176,7 +176,9 @@ document.addEventListener('DOMContentLoaded', function() {
         renderQuestionList();
     };
 
-    elements.publishBtn.addEventListener('click', () => {
+    elements.publishBtn.addEventListener('click', async () => {
+        console.log('Publishing exam for category:', currentCategoryId);
+        
         if (questions.length === 0) {
             elements.alertMsg.textContent = 'Please add at least one question to the exam.';
             alertModal.show();
@@ -184,27 +186,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const newExam = {
-            id: 'custom_' + Date.now(),
             title: 'Mock Theory Exam',
             questions: questions,
-            creator_id: user.email, 
-            creator_role: user.role,
-            category: currentCategoryId || 'private',
-            dateCreated: new Date().toISOString()
+            category: currentCategoryId
         };
 
-        // Save to LocalStorage
-        const customExams = JSON.parse(localStorage.getItem('licensify_custom_exams')) || [];
-        customExams.push(newExam);
-        localStorage.setItem('licensify_custom_exams', JSON.stringify(customExams));
+        try {
+            elements.publishBtn.disabled = true;
+            elements.publishBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...';
 
-        // Toast success
-        showSuccessToast('Mock exam created successfully.');
+            const response = await fetch('backend/exams/create_exam.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newExam)
+            });
 
-        modal.hide();
-        
-        // Refresh the quiz list if we are in the custom category view
-        if (window.refreshQuizzes) window.refreshQuizzes();
+            const data = await response.json();
+            console.log('Server response:', data);
+
+            if (data.success) {
+                showSuccessToast('Mock exam created and students notified.');
+                modal.hide();
+                if (window.refreshQuizzes) window.refreshQuizzes();
+            } else {
+                alert('Error from server: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Network Error:', error);
+            alert('A network error occurred. Check the console (F12) for details.');
+        } finally {
+            elements.publishBtn.disabled = false;
+            elements.publishBtn.textContent = 'Publish Mock Exam';
+        }
     });
 
     function showSuccessToast(msg) {

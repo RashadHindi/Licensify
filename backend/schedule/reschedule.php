@@ -46,7 +46,15 @@ try {
     $stmt = $pdo->prepare("SELECT id FROM reservations WHERE trainer_id = ? AND date = ? AND time = ? AND status != 'Cancelled'");
     $stmt->execute([$trainerId, $date, $time]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'This slot is no longer available.']);
+        echo json_encode(['success' => false, 'message' => 'This trainer is already booked at this time.']);
+        exit;
+    }
+
+    // Check if the student already has another booking at this time (excluding the one they are rescheduling)
+    $stmt = $pdo->prepare("SELECT id FROM reservations WHERE student_id = ? AND date = ? AND time = ? AND id != ? AND status != 'Cancelled'");
+    $stmt->execute([$studentId, $date, $time, $reservationId]);
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'You already have another lesson booked at this exact time.']);
         exit;
     }
 
