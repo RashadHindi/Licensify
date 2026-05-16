@@ -60,10 +60,23 @@ if (!preg_match('/^[0-9\+\-\s\(\)]+$/', $phone)) {
 }
 
 $userId = $_SESSION['user']['id'];
+$role   = $_SESSION['user']['role'];
 
 // Update in database
-$stmt = $pdo->prepare('UPDATE users SET fname = ?, lname = ?, phone = ? WHERE id = ?');
-$stmt->execute([$fname, $lname, $phone, $userId]);
+if ($role === 'trainer') {
+    $carType = trim($data['car_type'] ?? '');
+    $expNum  = trim($data['experience'] ?? '');
+    $experience = $expNum ? $expNum . ' Years' : '';
+    
+    $stmt = $pdo->prepare('UPDATE users SET fname = ?, lname = ?, phone = ?, car_type = ?, experience = ? WHERE id = ?');
+    $stmt->execute([$fname, $lname, $phone, $carType, $experience, $userId]);
+    
+    $_SESSION['user']['car_type'] = $carType;
+    $_SESSION['user']['experience'] = $experience;
+} else {
+    $stmt = $pdo->prepare('UPDATE users SET fname = ?, lname = ?, phone = ? WHERE id = ?');
+    $stmt->execute([$fname, $lname, $phone, $userId]);
+}
 
 // Update session
 $_SESSION['user']['fname'] = $fname;

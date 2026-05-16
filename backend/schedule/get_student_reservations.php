@@ -18,7 +18,7 @@ require_once __DIR__ . '/../config/db.php';
 $studentId = $_SESSION['user']['id'];
 
 $stmt = $pdo->prepare("
-    SELECT r.id, r.date, r.time, r.status, r.trainer_id, t.fname AS trainer_fname, t.lname AS trainer_lname 
+    SELECT r.id, r.date, r.time, r.status, r.trainer_id, t.fname AS trainer_fname, t.lname AS trainer_lname, t.car_type
     FROM reservations r
     JOIN users t ON r.trainer_id = t.id
     WHERE r.student_id = ? AND r.status != 'Cancelled'
@@ -35,7 +35,8 @@ foreach ($reservations as $r) {
         'time'       => $r['time'],
         'status'     => $r['status'], // 'Upcoming' or 'Completed'
         'trainer'    => $r['trainer_fname'] . ' ' . $r['trainer_lname'],
-        'trainer_id' => $r['trainer_id']
+        'trainer_id' => $r['trainer_id'],
+        'car_type'   => $r['car_type'] ?: 'Manual & Auto'
     ];
 }
 

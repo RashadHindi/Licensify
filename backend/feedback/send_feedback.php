@@ -26,19 +26,6 @@ if (!$studentId || !$message) {
 }
 
 try {
-    // Ensure trainer_feedback table exists
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `trainer_feedback` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `trainer_id` INT NOT NULL,
-            `student_id` INT NOT NULL,
-            `message` TEXT NOT NULL,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (`trainer_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-            FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-
     $stmt = $pdo->prepare("INSERT INTO trainer_feedback (trainer_id, student_id, message) VALUES (?, ?, ?)");
     $stmt->execute([$trainerId, $studentId, $message]);
 

@@ -33,21 +33,6 @@ if (!$trainerId || $rating < 1 || $rating > 5) {
 }
 
 try {
-    // Ensure student_reviews table exists
-    $pdo->exec("
-        CREATE TABLE IF NOT EXISTS `student_reviews` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `trainer_id` INT NOT NULL,
-            `student_id` INT NOT NULL,
-            `rating` INT NOT NULL,
-            `review` TEXT,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (`trainer_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-            FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-            UNIQUE KEY `unique_student_trainer_review` (`trainer_id`, `student_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    ");
-
     // Insert or update the review
     $stmt = $pdo->prepare("
         INSERT INTO student_reviews (trainer_id, student_id, rating, review) 

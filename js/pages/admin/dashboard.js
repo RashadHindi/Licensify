@@ -18,6 +18,9 @@ function initDashboard() {
         document.getElementById('stat-students').innerText = data.stats.students;
         document.getElementById('stat-trainers').innerText = data.stats.trainers;
         document.getElementById('stat-reservations').innerText = data.stats.reservations;
+        if (document.getElementById('stat-exams')) {
+            document.getElementById('stat-exams').innerText = data.stats.exams || 0;
+        }
 
         renderRecentReservations(data.recent_reservations);
         renderTrainerDistribution(data.trainer_distribution, data.stats.reservations);

@@ -7,12 +7,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
     renderProgressView();
 
-    function renderProgressView() {
+    async function renderProgressView() {
         const container = document.getElementById('progress-content');
         if (!container) return;
 
-        const studyProgress = window.authApp.getUserData('study_progress') || {};
-        const testScores = window.authApp.getUserData('test_scores') || [];
+        let testScores = [];
+        try {
+            const res = await fetch('backend/exams/get_scores.php');
+            const data = await res.json();
+            if (data.success) {
+                testScores = data.scores;
+            } else {
+                testScores = window.authApp.getUserData('test_scores') || [];
+            }
+        } catch (err) {
+            console.error('Failed to fetch scores:', err);
+            testScores = window.authApp.getUserData('test_scores') || [];
+        }
+
+        let studyProgress = window.authApp.getUserData('study_progress') || {};
+
+        // Fetch study progress from backend
+        try {
+            const res = await fetch('backend/study/get_progress.php');
+            const data = await res.json();
+            if (data.success && data.progress) {
+                studyProgress = data.progress;
+                window.authApp.saveUserData('study_progress', studyProgress);
+            }
+        } catch (err) {
+            console.error('Failed to fetch study progress:', err);
+        }
 
         const topics = [
             { id: 'traffic-signs', name: 'Traffic Signs', total: 15 },
@@ -21,16 +46,34 @@ document.addEventListener('DOMContentLoaded', function () {
             { id: 'safety-basics', name: 'Vehicle Basics', total: 10 }
         ];
 
+        // Fetch exam stats for the 5th block
+        let examStats = { total_attempted: 0, total_passed: 0 };
+        try {
+            const res = await fetch('backend/exams/get_stats.php');
+            const data = await res.json();
+            if (data.success) examStats = data;
+        } catch (err) {
+            console.error('Failed to fetch exam stats:', err);
+        }
+
+        const practiceTestStatus = examStats.total_passed >= 3 ? 'completed' : (examStats.total_attempted > 0 ? 'in-progress' : 'not-started');
+        studyProgress['practice-test'] = practiceTestStatus;
+
+        // Combine for overall counts
+        const allItems = [...topics, { id: 'practice-test', name: 'Practice Test', total: 3 }];
+
         // Calculate status counts
-        const completedCount = topics.filter(t => {
+        const completedCount = allItems.filter(t => {
             const completed = studyProgress[t.id + '_completed'] || 0;
             return completed === t.total || studyProgress[t.id] === 'completed';
         }).length;
-        const inProgressCount = topics.filter(t => {
+
+        const inProgressCount = allItems.filter(t => {
             const completed = studyProgress[t.id + '_completed'] || 0;
             return (completed > 0 && completed < t.total) || studyProgress[t.id] === 'in-progress';
         }).length;
-        const unstartedCount = topics.length - completedCount - inProgressCount;
+
+        const unstartedCount = allItems.length - completedCount - inProgressCount;
 
         // Calculate Overall Readiness (50% Study, 50% Exams)
         const totalLessons = topics.reduce((acc, t) => acc + t.total, 0);
@@ -38,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const c = studyProgress[t.id + '_completed'] || 0;
             return acc + (studyProgress[t.id] === 'completed' ? t.total : c);
         }, 0);
-        
+
         const studyReadiness = (lessonsDone / totalLessons) * 50;
         const examReadiness = testScores.length > 0 ? (Math.max(...testScores.map(s => s.percentage)) / 100) * 50 : 0;
         const readiness = Math.round(studyReadiness + examReadiness);
@@ -66,7 +109,21 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
 
-        const mistakes = window.authApp.getUserData('quiz_mistakes') || [];
+        // 2. Fetch Mistakes from Backend
+        let mistakes = [];
+        try {
+            const res = await fetch('backend/exams/get_mistakes.php');
+            const data = await res.json();
+            if (data.success) {
+                mistakes = data.mistakes;
+            } else {
+                mistakes = window.authApp.getUserData('quiz_mistakes') || [];
+            }
+        } catch (err) {
+            console.error('Failed to fetch mistakes:', err);
+            mistakes = window.authApp.getUserData('quiz_mistakes') || [];
+        }
+
         let insightsHTML = '';
         if (mistakes.length > 0) {
             insightsHTML = mistakes.map((m, idx) => `
@@ -85,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         ` : ''}
                     </div>
                     <button class="btn btn-link text-white p-0 opacity-50 hover-opacity-100 transition-all" 
-                            onclick="progressApp.dismissMistake('${m.text.replace(/'/g, "\\'")}')"
+                            onclick="progressApp.dismissMistake('${m.id}', '${m.text.replace(/'/g, "\\'")}')"
                             title="Mark as Mastered">
                         <i class="bi bi-check2-circle fs-5"></i>
                     </button>
@@ -218,10 +275,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Expose functionality globally
     window.progressApp = {
-        dismissMistake: function (text) {
+        dismissMistake: function (id, text) {
+            // 1. Client-side update
             const mistakes = window.authApp.getUserData('quiz_mistakes') || [];
             const updated = mistakes.filter(m => m.text !== text);
             window.authApp.saveUserData('quiz_mistakes', updated);
+
+            // 2. Database update
+            if (window.authApp.isLoggedIn() && id) {
+                fetch('backend/exams/delete_mistake.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                }).catch(err => console.error('Error dismissing mistake in DB:', err));
+            }
+
             renderProgressView();
         }
     };

@@ -1,10 +1,10 @@
 /**
  * Trainer Settings Logic
  */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
     if (!user || user.role !== 'trainer') return;
-    
+
     renderSettingsView();
 
     function renderSettingsView() {
@@ -69,6 +69,22 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="col-12">
                                     <label class="form-label smaller fw-bold text-muted">Phone Number</label>
                                     <input type="tel" id="settings-phone" class="form-control rounded-3 py-2" value="${user.phone || ''}" placeholder="+1 234 567 890">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label smaller fw-bold text-muted">Car Type</label>
+                                    <select id="settings-car-type" class="form-select rounded-3 py-2">
+                                        <option value="" ${!user.car_type ? 'selected' : ''}>Not Selected</option>
+                                        <option value="Manual & Auto" ${user.car_type === 'Manual & Auto' ? 'selected' : ''}>Manual & Auto</option>
+                                        <option value="Automatic" ${user.car_type === 'Automatic' ? 'selected' : ''}>Automatic</option>
+                                        <option value="Manual" ${user.car_type === 'Manual' ? 'selected' : ''}>Manual</option>
+                                        <option value="Heavy Truck" ${user.car_type === 'Heavy Truck' ? 'selected' : ''}>Heavy Truck</option>
+                                        <option value="Light Truck" ${user.car_type === 'Light Truck' ? 'selected' : ''}>Light Truck</option>
+                                        <option value="Motorcycle" ${user.car_type === 'Motorcycle' ? 'selected' : ''}>Motorcycle</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label smaller fw-bold text-muted">Years of Experience (1-50)</label>
+                                    <input type="number" id="settings-experience" class="form-control rounded-3 py-2" min="1" max="50" value="${user.experience ? user.experience.replace(/[^0-9]/g, '') : ''}" placeholder="e.g. 10">
                                 </div>
                                 <div class="col-12 text-end mt-4">
                                     <button type="button" class="btn btn-dark-green rounded-pill px-4 py-2 fw-bold text-white shadow-sm" id="save-profile-btn">Save Changes</button>
@@ -140,30 +156,30 @@ document.addEventListener('DOMContentLoaded', function() {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ photo: pendingDataUrl })
                         })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
-                                user.profile_photo = data.photo_path;
-                                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+                                    user.profile_photo = data.photo_path;
+                                    sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
 
-                                imgContainer.innerHTML = `<img src="${data.photo_path}" class="w-100 h-100 object-fit-cover">`;
-                                window.authApp.updateNavbar();
+                                    imgContainer.innerHTML = `<img src="${data.photo_path}" class="w-100 h-100 object-fit-cover">`;
+                                    window.authApp.updateNavbar();
+                                    previewModal.hide();
+                                    const successModal = new bootstrap.Modal(document.getElementById('photoSuccessModal'));
+                                    successModal.show();
+
+                                    setTimeout(() => renderSettingsView(), 500);
+                                } else {
+                                    previewModal.hide();
+                                    showError('Upload Failed', data.message || 'Could not upload photo. Please try again.');
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Photo upload error:', err);
                                 previewModal.hide();
-                                const successModal = new bootstrap.Modal(document.getElementById('photoSuccessModal'));
-                                successModal.show();
-                                
-                                setTimeout(() => renderSettingsView(), 500);
-                            } else {
-                                previewModal.hide();
-                                showError('Upload Failed', data.message || 'Could not upload photo. Please try again.');
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Photo upload error:', err);
-                            previewModal.hide();
-                            showError('Connection Error', 'A connection error occurred. Please try again.');
-                        });
+                                showError('Connection Error', 'A connection error occurred. Please try again.');
+                            });
                     }
                 };
             }
@@ -174,36 +190,36 @@ document.addEventListener('DOMContentLoaded', function() {
             deletePhotoBtn.addEventListener('click', () => {
                 const deleteModal = new bootstrap.Modal(document.getElementById('photoDeleteModal'));
                 const confirmDeleteBtn = document.getElementById('confirm-delete-photo-btn');
-                
+
                 deleteModal.show();
 
                 confirmDeleteBtn.onclick = () => {
                     fetch('backend/profile/delete_photo.php', { method: 'POST' })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
-                            user.profile_photo = null;
-                            sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                const user = JSON.parse(sessionStorage.getItem('licensify_current_user'));
+                                user.profile_photo = null;
+                                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
 
-                            window.authApp.updateNavbar();
-                            deleteModal.hide();
-                            
-                            const successModal = new bootstrap.Modal(document.getElementById('photoSuccessModal'));
-                            document.querySelector('#photoSuccessModal .modal-body p').textContent = 'Your profile photo has been removed.';
-                            successModal.show();
+                                window.authApp.updateNavbar();
+                                deleteModal.hide();
 
-                            renderSettingsView();
-                        } else {
+                                const successModal = new bootstrap.Modal(document.getElementById('photoSuccessModal'));
+                                document.querySelector('#photoSuccessModal .modal-body p').textContent = 'Your profile photo has been removed.';
+                                successModal.show();
+
+                                renderSettingsView();
+                            } else {
+                                deleteModal.hide();
+                                showError('Delete Failed', data.message || 'Could not delete photo. Please try again.');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Photo delete error:', err);
                             deleteModal.hide();
-                            showError('Delete Failed', data.message || 'Could not delete photo. Please try again.');
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Photo delete error:', err);
-                        deleteModal.hide();
-                        showError('Connection Error', 'A connection error occurred. Please try again.');
-                    });
+                            showError('Connection Error', 'A connection error occurred. Please try again.');
+                        });
                 };
             });
         }
@@ -286,6 +302,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fname = fnameInput.value.trim();
                 const lname = lnameInput.value.trim();
                 const phone = phoneInput.value.trim();
+                const carType = document.getElementById('settings-car-type') ? document.getElementById('settings-car-type').value : null;
+                const experience = document.getElementById('settings-experience') ? document.getElementById('settings-experience').value : null;
 
                 // Check for empty fields
                 if (!fname || !lname || !phone) {
@@ -295,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!phone) phoneInput.classList.add('is-invalid-custom');
                     return;
                 }
-                
+
                 if (!validateName(fnameInput)) {
                     showError('Invalid Name', 'First name should not contain numbers.');
                     return;
@@ -309,11 +327,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                // Check if anything actually changed
-                const isUnchanged = fname === user.fname && 
-                                   lname === user.lname && 
-                                   phone === (user.phone || '');
-                
+                const isUnchanged = fname === user.fname &&
+                    lname === user.lname &&
+                    phone === (user.phone || '') &&
+                    carType === (user.car_type || '') &&
+                    experience === (user.experience ? user.experience.replace(/[^0-9]/g, '') : '');
+
                 if (isUnchanged) {
                     showError('No Changes', 'You haven\'t modified any information to update.');
                     return;
@@ -323,30 +342,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch('backend/profile/update_profile.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fname, lname, phone })
+                    body: JSON.stringify({ fname, lname, phone, car_type: carType, experience: experience })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const updatedUser = data.user;
-                        updatedUser.profile_photo = user.profile_photo;
-                        sessionStorage.setItem('licensify_current_user', JSON.stringify(updatedUser));
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const updatedUser = data.user;
+                            updatedUser.profile_photo = user.profile_photo;
+                            sessionStorage.setItem('licensify_current_user', JSON.stringify(updatedUser));
 
-                        window.authApp.updateNavbar();
-                        const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
-                        document.getElementById('settings-success-title').textContent = 'Profile Updated!';
-                        document.getElementById('settings-success-msg').textContent = 'Your profile information has been successfully updated.';
-                        successModal.show();
-                        
-                        setTimeout(() => renderSettingsView(), 500);
-                    } else {
-                        showError('Update Failed', data.message || 'Could not update profile. Please try again.');
-                    }
-                })
-                .catch(err => {
-                    console.error('Profile update error:', err);
-                    showError('Connection Error', 'A connection error occurred. Please try again.');
-                });
+                            window.authApp.updateNavbar();
+                            const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
+                            document.getElementById('settings-success-title').textContent = 'Profile Updated!';
+                            document.getElementById('settings-success-msg').textContent = 'Your profile information has been successfully updated.';
+                            successModal.show();
+
+                            setTimeout(() => renderSettingsView(), 500);
+                        } else {
+                            showError('Update Failed', data.message || 'Could not update profile. Please try again.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Profile update error:', err);
+                        showError('Connection Error', 'A connection error occurred. Please try again.');
+                    });
             });
         }
 
@@ -380,25 +399,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current_password: currentPass, new_password: newPass })
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
-                        document.getElementById('settings-success-title').textContent = 'Password Changed!';
-                        document.getElementById('settings-success-msg').textContent = 'Your password has been successfully updated.';
-                        successModal.show();
-                        
-                        currentPassInput.value = '';
-                        newPassInput.value = '';
-                        confirmPassInput.value = '';
-                    } else {
-                        showError('Error', data.message || 'Password update failed. Please try again.');
-                    }
-                })
-                .catch(err => {
-                    console.error('Password update error:', err);
-                    showError('Connection Error', 'A connection error occurred. Please try again.');
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            const successModal = new bootstrap.Modal(document.getElementById('settingsSuccessModal'));
+                            document.getElementById('settings-success-title').textContent = 'Password Changed!';
+                            document.getElementById('settings-success-msg').textContent = 'Your password has been successfully updated.';
+                            successModal.show();
+
+                            currentPassInput.value = '';
+                            newPassInput.value = '';
+                            confirmPassInput.value = '';
+                        } else {
+                            showError('Error', data.message || 'Password update failed. Please try again.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Password update error:', err);
+                        showError('Connection Error', 'A connection error occurred. Please try again.');
+                    });
             });
         }
     }

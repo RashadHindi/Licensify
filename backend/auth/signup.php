@@ -32,10 +32,17 @@ $lname = trim($data['lname'] ?? '');
 $email = trim($data['email'] ?? '');
 $phone = trim($data['phone'] ?? '');
 $pass  = $data['password'] ?? '';
+$code  = trim($data['code'] ?? '');
 
 // Validation
-if (!$fname || !$lname || !$email || !$pass) {
+if (!$fname || !$lname || !$email || !$pass || !$code) {
     echo json_encode(['success' => false, 'message' => 'All required fields must be filled.']);
+    exit;
+}
+
+// Verify code from session
+if (!isset($_SESSION['signup_verify_code']) || $_SESSION['signup_verify_code'] !== $code || $_SESSION['signup_email_pending'] !== $email) {
+    echo json_encode(['success' => false, 'message' => 'Invalid or expired verification code.']);
     exit;
 }
 
@@ -77,5 +84,9 @@ $sessionUser = [
 ];
 
 $_SESSION['user'] = $sessionUser;
+
+// Clear verification session
+unset($_SESSION['signup_verify_code']);
+unset($_SESSION['signup_email_pending']);
 
 echo json_encode(['success' => true, 'user' => $sessionUser]);

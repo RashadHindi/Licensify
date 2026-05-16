@@ -529,22 +529,22 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function initMockData() {
         let users = JSON.parse(localStorage.getItem('licensify_users')) || [];
-        
+
         // Check if our predefined admin exists
         const adminEmail = 'rashadhindi2004@gmail.com';
         const adminExists = users.some(u => u.email === adminEmail);
-        
+
         if (!adminExists) {
             // The single predefined admin for testing
-            const adminUser = { 
-                fname: 'Admin', 
-                lname: 'User', 
-                email: adminEmail, 
-                password: 'Password123!', 
-                role: 'admin', 
-                phone: '+1 234 567 890' 
+            const adminUser = {
+                fname: 'Admin',
+                lname: 'User',
+                email: adminEmail,
+                password: 'Password123!',
+                role: 'admin',
+                phone: '+1 234 567 890'
             };
-            
+
             // Add some mock trainers and students for the dashboard visualization
             const extraUsers = [
                 { fname: 'Sarah', lname: 'Johnson', email: 'sarah.trainer@licensify.com', password: 'Password123!', role: 'trainer', phone: '+1 555 0101' },
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 { fname: 'Ahmad', lname: 'Hassan', email: 'ahmad.student@gmail.com', password: 'Password123!', role: 'student', phone: '+1 555 0201' },
                 { fname: 'Emma', lname: 'Wilson', email: 'emma.student@gmail.com', password: 'Password123!', role: 'student', phone: '+1 555 0202' }
             ];
-            
+
             users.push(adminUser, ...extraUsers);
             localStorage.setItem('licensify_users', JSON.stringify(users));
             console.log('[LICENSIFY] Mock admin and data initialized.');
@@ -619,11 +619,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     e.preventDefault();
                     // Destroy PHP session, then clear client state
                     fetch('backend/auth/logout.php', { method: 'POST' })
-                    .finally(() => {
-                        sessionStorage.removeItem('licensify_current_user');
-                        localStorage.removeItem('licensify_guest_data');
-                        window.location.reload();
-                    });
+                        .finally(() => {
+                            sessionStorage.removeItem('licensify_current_user');
+                            localStorage.removeItem('licensify_guest_data');
+                            window.location.href = 'index.html';
+                        });
                 });
             }
         }
@@ -712,11 +712,11 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             // Destroy PHP session, then clear client state
             fetch('backend/auth/logout.php', { method: 'POST' })
-            .finally(() => {
-                sessionStorage.removeItem('licensify_current_user');
-                localStorage.removeItem('licensify_guest_data');
-                window.location.href = 'index.html';
-            });
+                .finally(() => {
+                    sessionStorage.removeItem('licensify_current_user');
+                    localStorage.removeItem('licensify_guest_data');
+                    window.location.href = 'index.html';
+                });
         });
     }
 
@@ -753,31 +753,31 @@ document.addEventListener('DOMContentLoaded', function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password: pass })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                const user = data.user;
-                sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
-                showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
-                updateNavbarForUser(user);
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                    showAlert(`Welcome back, ${user.fname}! Logging you in...`, 'success');
+                    updateNavbarForUser(user);
 
-                setTimeout(() => {
-                    if (user.role === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
-                    } else if (user.role === 'trainer') {
-                        window.location.href = 'trainer-dashboard.html';
-                    } else {
-                        if (!handlePostAuthRedirect()) window.location.reload();
-                    }
-                }, 1000);
-            } else {
-                showAlert(data.message || 'Invalid email or password.');
-            }
-        })
-        .catch(err => {
-            console.error('Login error:', err);
-            showAlert('A connection error occurred. Please try again.');
-        });
+                    setTimeout(() => {
+                        if (user.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else if (user.role === 'trainer') {
+                            window.location.href = 'trainer-dashboard.html';
+                        } else {
+                            if (!handlePostAuthRedirect()) window.location.reload();
+                        }
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Invalid email or password.');
+                }
+            })
+            .catch(err => {
+                console.error('Login error:', err);
+                showAlert('A connection error occurred. Please try again.');
+            });
     });
 
 
@@ -801,19 +801,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.exists) {
-                    showAlert('An account with this email already exists.', 'error');
-                } else {
-                    signupEmailPending = email;
-                    switchView('signup2');
-                }
-            })
-            .catch(err => {
-                console.error('Email check error:', err);
-                showAlert('A connection error occurred. Please try again.');
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.exists) {
+                        showAlert('An account with this email already exists.', 'error');
+                    } else {
+                        signupEmailPending = email;
+                        switchView('signup2');
+                    }
+                })
+                .catch(err => {
+                    console.error('Email check error:', err);
+                    showAlert('A connection error occurred. Please try again.');
+                });
         }
     });
 
@@ -831,12 +831,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const vFname = validateField(fnameEl, () => fnameEl.value.trim() !== '');
         const vLname = validateField(lnameEl, () => lnameEl.value.trim() !== '');
         const vPhone = validateField(phoneEl, () => phoneEl.value.trim() !== '');
-        
+
         let vPass = validateField(passEl, () => passEl.value !== '');
         if (vPass) {
             vPass = validateField(passEl, () => checkPasswordStrength(passEl.value), "Password must be at least 8 characters with capital letters, numbers, and symbols.");
         }
-        
+
         const vConf = validateField(confEl, () => confEl.value !== '');
         const vTerms = validateField(termsEl, () => termsEl.checked);
 
@@ -847,12 +847,33 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Send logic
-        expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`[LICENSIFY DEMO] Signup code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+        // Send logic removed from frontend to avoid mismatch
+        // expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+        // console.log(`[LICENSIFY DEMO] Signup code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
 
-        switchView('signup-verify');
-        startTimer(120, document.getElementById('verify-timer'));
+        // Request REAL email from backend
+        fetch('backend/auth/send_code.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: signupEmailPending, type: 'signup' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Sync the code from backend so console matches email
+                expectedVerifyCode = data.code;
+                console.log(`[LICENSIFY DEMO] Signup code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+
+                switchView('signup-verify');
+                startTimer(120, document.getElementById('verify-timer'));
+            } else {
+                showAlert(data.message || 'Failed to send verification email.');
+            }
+        })
+        .catch(err => {
+            console.error('Send code error:', err);
+            showAlert('A connection error occurred.');
+        });
     });
 
     // Signup Verify
@@ -869,36 +890,37 @@ document.addEventListener('DOMContentLoaded', function () {
             const lname = document.getElementById('signup-lname').value.trim();
             const phone = document.getElementById('signup-phone').value.trim();
             const pass = document.getElementById('signup-password').value;
+            const code = codeEl.value.trim();
 
             // Create account via PHP backend
             fetch('backend/auth/signup.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fname, lname, email: signupEmailPending, phone, password: pass })
+                body: JSON.stringify({ fname, lname, email: signupEmailPending, phone, password: pass, code })
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    const user = data.user;
-                    sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const user = data.user;
+                        sessionStorage.setItem('licensify_current_user', JSON.stringify(user));
 
-                    showAlert('Account Created Successfully!', 'success');
-                    updateNavbarForUser(user);
-                    if (timerInterval) clearInterval(timerInterval);
-                    forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
+                        showAlert('Account Created Successfully!', 'success');
+                        updateNavbarForUser(user);
+                        if (timerInterval) clearInterval(timerInterval);
+                        forms.signupVerify.querySelector('button[type="submit"]').disabled = true;
 
-                    setTimeout(() => {
-                        if (!handlePostAuthRedirect()) window.location.reload();
-                        forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
-                    }, 1500);
-                } else {
-                    showAlert(data.message || 'Signup failed. Please try again.', 'error');
-                }
-            })
-            .catch(err => {
-                console.error('Signup error:', err);
-                showAlert('A connection error occurred. Please try again.');
-            });
+                        setTimeout(() => {
+                            if (!handlePostAuthRedirect()) window.location.reload();
+                            forms.signupVerify.querySelector('button[type="submit"]').disabled = false;
+                        }, 1500);
+                    } else {
+                        showAlert(data.message || 'Signup failed. Please try again.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('Signup error:', err);
+                    showAlert('A connection error occurred. Please try again.');
+                });
         } else {
             showAlert('Invalid verification code.', 'error');
         }
@@ -917,10 +939,29 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isEmailValid) return;
 
         signupEmailPending = emailEl.value.trim();
-        expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`[LICENSIFY DEMO] Forgot Password code for ${signupEmailPending}: ${expectedVerifyCode}`);
+        // expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+        // console.log(`[LICENSIFY DEMO] Forgot Password code for ${signupEmailPending}: ${expectedVerifyCode}`);
 
-        switchView('forgot-verify');
+        // Request REAL email from backend
+        fetch('backend/auth/send_code.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: signupEmailPending, type: 'forgot' })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                expectedVerifyCode = data.code;
+                console.log(`[LICENSIFY DEMO] Forgot Password code for ${signupEmailPending}: ${expectedVerifyCode}`);
+                switchView('forgot-verify');
+            } else {
+                showAlert(data.message || 'Failed to send reset email.');
+            }
+        })
+        .catch(err => {
+            console.error('Forgot password error:', err);
+            showAlert('A connection error occurred.');
+        });
     });
 
     // Forgot Password - Verify Code
@@ -962,23 +1003,23 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('backend/auth/reset_password.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: signupEmailPending, password: newPassEl.value })
+            body: JSON.stringify({ email: signupEmailPending, password: newPassEl.value, code: expectedVerifyCode })
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('Password reset successfully! Redirecting to login...', 'success');
-                setTimeout(() => {
-                    switchView('login');
-                }, 1500);
-            } else {
-                showAlert(data.message || 'Password reset failed. Please try again.', 'error');
-            }
-        })
-        .catch(err => {
-            console.error('Reset error:', err);
-            showAlert('A connection error occurred. Please try again.');
-        });
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Password reset successfully! Redirecting to login...', 'success');
+                    setTimeout(() => {
+                        switchView('login');
+                    }, 1500);
+                } else {
+                    showAlert(data.message || 'Password reset failed. Please try again.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Reset error:', err);
+                showAlert('A connection error occurred. Please try again.');
+            });
     });
 
     // Resend Code Logic
@@ -987,10 +1028,25 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             if (btn.style.pointerEvents === 'none') return;
 
-            // Generate new code
-            expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-            console.log(`[LICENSIFY DEMO] New Verification Code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
-            showAlert('A new code has been sent to your email.', 'success');
+            // expectedVerifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+            // console.log(`[LICENSIFY DEMO] New Verification Code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+            
+            // Request REAL email from backend
+            fetch('backend/auth/send_code.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: signupEmailPending, type: btn.closest('#forgot-verify-form') ? 'forgot' : 'signup' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    expectedVerifyCode = data.code;
+                    console.log(`[LICENSIFY DEMO] New Verification Code sent to ${signupEmailPending}: ${expectedVerifyCode}`);
+                    showAlert('A new code has been sent to your email.', 'success');
+                } else {
+                    showAlert(data.message || 'Failed to resend email.');
+                }
+            });
 
             // Disable for 60 seconds
             let timeLeft = 60;
